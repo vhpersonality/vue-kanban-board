@@ -15,78 +15,139 @@
         />
       </div>
 
-      <div class="sidebar-content">
-        <div class="projects-section">
-          <div class="section-header" v-if="!isSidebarCollapsed">
-            <span>Проекты</span>
-            <el-button 
-              type="primary" 
-              :icon="Plus" 
-              size="small" 
-              circle 
-              @click="openAddProjectDialog"
-            />
+      <!-- Меню пользователя в сайдбаре -->
+      <div class="user-section">
+        <div class="user-info">
+          <el-avatar :size="32" :src="currentUser.avatar" />
+          <div class="user-details" v-if="!isSidebarCollapsed">
+            <span class="user-name">{{ currentUser.name }}</span>
+            <span class="user-role">{{ currentUser.role }}</span>
           </div>
-          <el-tooltip 
-            v-else
-            content="Добавить проект" 
-            placement="right"
-          >
-            <el-button 
-              type="primary" 
-              :icon="Plus" 
-              size="small" 
-              circle 
-              @click="openAddProjectDialog"
-              class="icon-btn"
-            />
-          </el-tooltip>
+        </div>
+      </div>
 
-          <div class="projects-list">
-            <div
-              v-for="project in projects"
-              :key="project.id"
-              class="project-item"
-              :class="{ active: currentProject?.id === project.id }"
-              @click="selectProject(project)"
+      <div class="sidebar-content">
+        <!-- Навигация -->
+        <div class="sidebar-nav">
+          <div 
+            class="nav-item" 
+            :class="{ active: activeNav === 'projects' }"
+            @click="activeNav = 'projects'"
+          >
+            <el-icon><Folder /></el-icon>
+            <span v-if="!isSidebarCollapsed">Проекты</span>
+          </div>
+          <div 
+            class="nav-item" 
+            :class="{ active: activeNav === 'team' }"
+            @click="activeNav = 'team'"
+          >
+            <el-icon><User /></el-icon>
+            <span v-if="!isSidebarCollapsed">Команда</span>
+          </div>
+        </div>
+
+        <!-- Контент в зависимости от выбранной навигации -->
+        <div class="sidebar-panel">
+          <!-- Панель проектов -->
+          <div v-if="activeNav === 'projects'" class="projects-section">
+            <div class="section-header" v-if="!isSidebarCollapsed">
+              <span>Проекты</span>
+              <el-button 
+                type="primary" 
+                :icon="Plus" 
+                size="small" 
+                circle 
+                @click="openAddProjectDialog"
+              />
+            </div>
+            <el-tooltip 
+              v-else
+              content="Добавить проект" 
+              placement="right"
             >
-              <div class="project-icon">
-                <el-icon><Folder /></el-icon>
-              </div>
-              <div class="project-info" v-if="!isSidebarCollapsed">
-                <span class="project-name">{{ project.name }}</span>
-                <span class="project-stats">
-                  {{ getProjectStats(project) }}
-                </span>
-              </div>
-              <div class="project-actions" v-if="!isSidebarCollapsed">
-                <el-button
-                  type="primary"
-                  :icon="Edit"
-                  size="small"
-                  text
-                  circle
-                  @click.stop="openEditProjectDialog(project)"
-                />
-                <el-button
-                  type="danger"
-                  :icon="Delete"
-                  size="small"
-                  text
-                  circle
-                  @click.stop="openDeleteProjectDialog(project)"
-                  :disabled="projects.length <= 1"
-                />
-              </div>
-              <el-tooltip 
-                v-else
-                :content="project.name" 
-                placement="right"
+              <el-button 
+                type="primary" 
+                :icon="Plus" 
+                size="small" 
+                circle 
+                @click="openAddProjectDialog"
+                class="icon-btn"
+              />
+            </el-tooltip>
+
+            <div class="projects-list">
+              <div
+                v-for="project in projects"
+                :key="project.id"
+                class="project-item"
+                :class="{ active: currentProject?.id === project.id }"
+                @click="selectProject(project)"
               >
                 <div class="project-icon">
                   <el-icon><Folder /></el-icon>
                 </div>
-              </el-tooltip>
+                <div class="project-info" v-if="!isSidebarCollapsed">
+                  <span class="project-name">{{ project.name }}</span>
+                  <span class="project-stats">
+                    {{ getProjectStats(project) }}
+                  </span>
+                </div>
+                <el-tooltip 
+                  v-else
+                  :content="project.name" 
+                  placement="right"
+                >
+                  <div class="project-icon">
+                    <el-icon><Folder /></el-icon>
+                  </div>
+                </el-tooltip>
+              </div>
+            </div>
+          </div>
+
+          <!-- Панель команды -->
+          <div v-if="activeNav === 'team'" class="team-section">
+            <div class="section-header" v-if="!isSidebarCollapsed">
+              <span>Команда</span>
+              <el-button 
+                type="primary" 
+                :icon="Plus" 
+                size="small" 
+                circle 
+                @click="openAddTeamMemberDialog"
+              />
+            </div>
+
+            <div class="team-list">
+              <div
+                v-for="member in teamMembers"
+                :key="member.id"
+                class="team-member"
+              >
+                <div class="member-avatar">
+                  <el-avatar :size="32" :src="member.avatar" />
+                </div>
+                <div class="member-info" v-if="!isSidebarCollapsed">
+                  <span class="member-name">{{ member.name }}</span>
+                  <span class="member-role">{{ member.role }}</span>
+                  <div class="member-projects">
+                    <span v-for="projectId in member.projects" :key="projectId" class="project-tag">
+                      {{ getProjectName(projectId) }}
+                    </span>
+                  </div>
+                </div>
+                <div class="member-actions" v-if="!isSidebarCollapsed">
+                  <el-button
+                    type="primary"
+                    :icon="Edit"
+                    size="small"
+                    text
+                    circle
+                    @click.stop="openEditTeamMemberDialog(member)"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -95,50 +156,54 @@
 
     <!-- Основной контент -->
     <div class="main-content" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
-      <!-- Шапка с пользователем -->
-      <div class="top-header">
-        <div class="header-left">
-          <el-button :icon="Menu" @click="toggleSidebar" />
-          <span class="app-title">Kanban Board</span>
-        </div>
-        <div class="user-menu">
-          <el-dropdown @command="handleUserCommand">
-            <div class="user-info">
-              <el-avatar :size="32" :src="currentUser.avatar" />
-              <span class="user-name">{{ currentUser.name }}</span>
-              <el-icon><ArrowDown /></el-icon>
-            </div>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item command="profile">Мой профиль</el-dropdown-item>
-                <el-dropdown-item command="settings">Настройки</el-dropdown-item>
-                <el-dropdown-item divided command="logout">Выйти</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-        </div>
-      </div>
-
       <!-- Хедер проекта -->
       <div class="project-header">
         <div class="project-title-section">
+          <!-- Название проекта - редактируемое по клику -->
+          <div 
+            v-if="currentProject && !projectTitleEditing"
+            class="project-title-display"
+            @click="startEditingProjectTitle"
+          >
+            <h1 class="project-title">{{ currentProject.name }}</h1>
+            <el-icon><Edit /></el-icon>
+          </div>
           <el-input
-            v-if="currentProject"
+            v-else-if="currentProject"
             v-model="currentProject.name"
             class="project-title-input"
             placeholder="Название проекта"
-            @blur="saveToLocalStorage"
+            @blur="finishEditingProjectTitle"
+            @keyup.enter="finishEditingProjectTitle"
+            ref="projectTitleInput"
+            autofocus
           />
+          
+          <!-- Описание проекта - редактируемое по клику -->
+          <div 
+            v-if="currentProject && !projectDescriptionEditing"
+            class="project-description-display"
+            @click="startEditingProjectDescription"
+          >
+            <p class="project-description">{{ currentProject.description || 'Добавить описание проекта...' }}</p>
+            <el-icon><Edit /></el-icon>
+          </div>
           <el-input
-            v-if="currentProject"
+            v-else-if="currentProject"
             v-model="currentProject.description"
             class="project-description-input"
             placeholder="Добавить описание проекта..."
             type="textarea"
             :rows="2"
-            @blur="saveToLocalStorage"
+            @blur="finishEditingProjectDescription"
+            @keyup.enter="finishEditingProjectDescription"
+            ref="projectDescriptionInput"
+            autofocus
           />
-          <h1 v-else class="project-title-placeholder">Выберите проект</h1>
+          
+          <div v-else class="project-placeholder">
+            <h1>Выберите проект</h1>
+          </div>
         </div>
       </div>
 
@@ -156,7 +221,6 @@
           </el-tab-pane>
           <el-tab-pane label="Доска" name="board">
             <div class="kanban-view">
-              <!-- Канбан доска -->
               <div class="board" v-if="currentProject">
                 <draggable 
                   v-model="currentProject.columns" 
@@ -171,7 +235,7 @@
                       @mouseenter="hoveredColumn = column.id"
                       @mouseleave="hoveredColumn = null"
                     >
-                      <div class="column">
+                      <div class="column" :style="{ '--column-color': column.color || '#409EFF' }">
                         <div class="column-header">
                           <div class="column-title-section">
                             <!-- Цвет колонки -->
@@ -188,7 +252,7 @@
                               @click="startEditingColumn(column)"
                             >
                               <span class="column-title">{{ column.title }}</span>
-                              <span class="task-count">({{ column.tasks.length }})</span>
+                              <span class="task-count">{{ column.tasks.length }}</span>
                             </div>
                             
                             <!-- Поле редактирования -->
@@ -246,7 +310,6 @@
                               @click="openTaskDetails(task)"
                             >
                               <div class="task-content">
-                                <!-- Только название, исполнитель, приоритет и дедлайн -->
                                 <div class="task-header">
                                   <p class="task-title">{{ task.title }}</p>
                                 </div>
@@ -254,7 +317,6 @@
                                 <div class="task-meta">
                                   <div class="assignee-info" v-if="task.assignee">
                                     <el-avatar :size="20" :src="task.assignee.avatar" />
-                                    <span class="assignee-name">{{ task.assignee.name }}</span>
                                   </div>
                                   
                                   <div class="task-tags">
@@ -279,7 +341,7 @@
                           </template>
                         </draggable>
 
-                        <!-- Кнопка добавления задачи (тоже показывается при наведении) -->
+                        <!-- Кнопка добавления задачи -->
                         <div class="column-footer" v-show="hoveredColumn === column.id">
                           <el-button 
                             type="primary" 
@@ -295,6 +357,7 @@
                   </template>
                 </draggable>
 
+                <!-- Кнопка добавления колонки -->
                 <div class="add-column-section">
                   <el-button 
                     type="primary" 
@@ -335,7 +398,7 @@
       </div>
     </div>
 
-    <!-- Боковая панель деталей задачи (Notion-style) -->
+    <!-- Боковая панель деталей задачи -->
     <el-drawer
       v-model="detailDrawerVisible"
       direction="rtl"
@@ -361,12 +424,63 @@
             <h1 class="task-main-title">{{ currentTask.title }}</h1>
           </div>
 
+          <!-- Трекинг времени -->
+          <div class="time-tracking-section">
+            <div class="time-tracking-card">
+              <div class="time-display">
+                <div class="time-estimate">
+                  <label>Оценка времени:</label>
+                  <div class="time-input-group">
+                    <el-input-number 
+                      v-model="currentTask.timeEstimate.hours" 
+                      :min="0" 
+                      :max="999" 
+                      size="small"
+                      placeholder="Час"
+                    />
+                    <span>ч</span>
+                    <el-input-number 
+                      v-model="currentTask.timeEstimate.minutes" 
+                      :min="0" 
+                      :max="59" 
+                      size="small"
+                      placeholder="Мин"
+                    />
+                    <span>м</span>
+                  </div>
+                </div>
+                
+                <div class="time-tracked">
+                  <label>Затрачено времени:</label>
+                  <div class="tracked-time">
+                    <span class="time-value">{{ formatTrackedTime(currentTask.timeTracked) }}</span>
+                    <div class="timer-controls">
+                      <el-button 
+                        type="primary" 
+                        :icon="currentTask.timerRunning ? VideoPause : VideoPlay" 
+                        circle 
+                        size="small"
+                        @click="toggleTimer"
+                        :class="{ active: currentTask.timerRunning }"
+                      />
+                      <el-button 
+                        type="danger" 
+                        :icon="RefreshRight" 
+                        circle 
+                        size="small"
+                        @click="resetTimer"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Основные свойства -->
           <div class="task-properties">
-            <div class="property-group">
-              <h3 class="property-group-title">Свойства</h3>
-              
-              <!-- Статус -->
+            <!-- Первая строка: статус и приоритет -->
+            <div class="property-row">
               <div class="property-item">
                 <label class="property-label">Статус</label>
                 <div class="property-value">
@@ -375,58 +489,7 @@
                   </el-tag>
                 </div>
               </div>
-
-              <!-- Исполнитель -->
-              <div class="property-item">
-                <label class="property-label">Исполнитель</label>
-                <div class="property-value">
-                  <div v-if="currentTask.assignee" class="user-display">
-                    <el-avatar :size="32" :src="currentTask.assignee.avatar" />
-                    <div class="user-info">
-                      <span class="user-name">{{ currentTask.assignee.name }}</span>
-                      <span class="user-role">{{ getAssigneeRole(currentTask.assignee) }}</span>
-                    </div>
-                  </div>
-                  <span v-else class="empty-value">Не назначен</span>
-                </div>
-              </div>
-
-              <!-- Постановщик -->
-              <div class="property-item">
-                <label class="property-label">Постановщик</label>
-                <div class="property-value">
-                  <div class="user-display">
-                    <el-avatar :size="32" :src="currentTask.creator?.avatar || currentUser.avatar" />
-                    <div class="user-info">
-                      <span class="user-name">{{ currentTask.creator?.name || currentUser.name }}</span>
-                      <span class="user-role">{{ currentTask.creator?.role || currentUser.role }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Дедлайн -->
-              <div class="property-item">
-                <label class="property-label">Дедлайн</label>
-                <div class="property-value">
-                  <div class="deadline-display" :class="{ 'overdue': isOverdue(currentTask.deadline) }">
-                    <el-icon><Calendar /></el-icon>
-                    <span class="deadline-text">
-                      {{ currentTask.deadline ? formatDate(currentTask.deadline) : 'Не установлен' }}
-                    </span>
-                    <el-tag 
-                      v-if="currentTask.deadline" 
-                      :type="getTimeRemainingType(currentTask.deadline)" 
-                      size="small"
-                      class="time-remaining-tag"
-                    >
-                      {{ getTimeRemainingText(currentTask.deadline) }}
-                    </el-tag>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Приоритет -->
+              
               <div class="property-item">
                 <label class="property-label">Приоритет</label>
                 <div class="property-value">
@@ -439,8 +502,38 @@
                   </el-tag>
                 </div>
               </div>
+            </div>
 
-              <!-- Даты создания и обновления -->
+            <!-- Вторая строка: исполнитель и постановщик -->
+            <div class="property-row">
+              <div class="property-item">
+                <label class="property-label">Исполнитель</label>
+                <div class="property-value">
+                  <div v-if="currentTask.assignee" class="user-display">
+                    <el-avatar :size="32" :src="currentTask.assignee.avatar" />
+                    <div class="user-info">
+                      <span class="user-name">{{ currentTask.assignee.name }}</span>
+                    </div>
+                  </div>
+                  <span v-else class="empty-value">Не назначен</span>
+                </div>
+              </div>
+
+              <div class="property-item">
+                <label class="property-label">Постановщик</label>
+                <div class="property-value">
+                  <div class="user-display">
+                    <el-avatar :size="32" :src="currentTask.creator?.avatar || currentUser.avatar" />
+                    <div class="user-info">
+                      <span class="user-name">{{ currentTask.creator?.name || currentUser.name }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Третья строка: даты -->
+            <div class="property-row">
               <div class="property-item">
                 <label class="property-label">Создана</label>
                 <div class="property-value date-value">
@@ -456,88 +549,162 @@
               </div>
             </div>
 
-            <!-- Описание задачи -->
-            <div class="property-group">
-              <h3 class="property-group-title">Описание</h3>
-              <div class="task-description-content">
-                <p v-if="currentTask.description" class="description-text">
-                  {{ currentTask.description }}
-                </p>
-                <p v-else class="empty-description">
-                  Нет описания
-                </p>
-              </div>
-            </div>
-
-            <!-- Трекинг времени -->
-            <div class="property-group">
-              <h3 class="property-group-title">Трекинг времени</h3>
-              <div class="time-tracking">
-                <div class="time-item">
-                  <span class="time-label">В работе:</span>
-                  <span class="time-value">{{ calculateTimeInProgress(currentTask) }}</span>
-                </div>
-                <div class="time-item">
-                  <span class="time-label">Создана:</span>
-                  <span class="time-value">{{ getTimeSinceCreation(currentTask) }}</span>
+            <!-- Дедлайн -->
+            <div class="property-item full-width">
+              <label class="property-label">Дедлайн</label>
+              <div class="property-value">
+                <div class="deadline-display" :class="{ 'overdue': isOverdue(currentTask.deadline) }">
+                  <el-icon><Calendar /></el-icon>
+                  <span class="deadline-text">
+                    {{ currentTask.deadline ? formatDate(currentTask.deadline) : 'Не установлен' }}
+                  </span>
+                  <el-tag 
+                    v-if="currentTask.deadline" 
+                    :type="getTimeRemainingType(currentTask.deadline)" 
+                    size="small"
+                    class="time-remaining-tag"
+                  >
+                    {{ getTimeRemainingText(currentTask.deadline) }}
+                  </el-tag>
                 </div>
               </div>
             </div>
+          </div>
 
-            <!-- Комментарии -->
-            <div class="property-group">
-              <div class="comments-header">
-                <h3 class="property-group-title">Комментарии</h3>
-                <span class="comments-count">{{ currentTask.comments?.length || 0 }}</span>
+          <!-- Подзадачи -->
+          <div class="subtasks-section">
+            <div class="section-header">
+              <h3>Подзадачи</h3>
+              <el-button type="primary" :icon="Plus" size="small" @click="addSubtask">
+                Добавить
+              </el-button>
+            </div>
+            
+            <div class="subtasks-list">
+              <div 
+                v-for="(subtask, index) in currentTask.subtasks" 
+                :key="subtask.id"
+                class="subtask-item"
+              >
+                <el-checkbox v-model="subtask.completed" @change="updateSubtask(subtask)">
+                  <span :class="{ completed: subtask.completed }">{{ subtask.title }}</span>
+                </el-checkbox>
+                <el-button
+                  type="danger"
+                  :icon="Delete"
+                  size="small"
+                  text
+                  circle
+                  @click="removeSubtask(index)"
+                />
               </div>
               
-              <!-- Список комментариев -->
-              <div class="comments-list" v-if="currentTask.comments && currentTask.comments.length > 0">
-                <div 
-                  v-for="comment in currentTask.comments" 
-                  :key="comment.id"
-                  class="comment-item"
-                >
-                  <div class="comment-header">
-                    <el-avatar :size="28" :src="comment.author.avatar" />
-                    <div class="comment-author">
-                      <span class="author-name">{{ comment.author.name }}</span>
-                      <span class="comment-time">{{ formatCommentTime(comment.createdAt) }}</span>
-                    </div>
-                  </div>
-                  <div class="comment-content">
-                    {{ comment.content }}
+              <div v-if="!currentTask.subtasks || currentTask.subtasks.length === 0" class="empty-subtasks">
+                <p>Нет подзадач</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Чек-лист -->
+          <div class="checklist-section">
+            <div class="section-header">
+              <h3>Чек-лист</h3>
+              <el-button type="primary" :icon="Plus" size="small" @click="addChecklistItem">
+                Добавить
+              </el-button>
+            </div>
+            
+            <div class="checklist-items">
+              <div 
+                v-for="(item, index) in currentTask.checklist" 
+                :key="item.id"
+                class="checklist-item"
+              >
+                <el-checkbox v-model="item.completed" @change="updateChecklistItem(item)">
+                  <span :class="{ completed: item.completed }">{{ item.text }}</span>
+                </el-checkbox>
+                <el-button
+                  type="danger"
+                  :icon="Delete"
+                  size="small"
+                  text
+                  circle
+                  @click="removeChecklistItem(index)"
+                />
+              </div>
+              
+              <div v-if="!currentTask.checklist || currentTask.checklist.length === 0" class="empty-checklist">
+                <p>Нет пунктов в чек-листе</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Описание задачи -->
+          <div class="description-section">
+            <h3>Описание</h3>
+            <div class="task-description-content">
+              <p v-if="currentTask.description" class="description-text">
+                {{ currentTask.description }}
+              </p>
+              <p v-else class="empty-description">
+                Нет описания
+              </p>
+            </div>
+          </div>
+
+          <!-- Комментарии -->
+          <div class="comments-section">
+            <div class="comments-header">
+              <h3>Комментарии</h3>
+              <span class="comments-count">{{ currentTask.comments?.length || 0 }}</span>
+            </div>
+            
+            <!-- Список комментариев -->
+            <div class="comments-list" v-if="currentTask.comments && currentTask.comments.length > 0">
+              <div 
+                v-for="comment in currentTask.comments" 
+                :key="comment.id"
+                class="comment-item"
+              >
+                <div class="comment-header">
+                  <el-avatar :size="28" :src="comment.author.avatar" />
+                  <div class="comment-author">
+                    <span class="author-name">{{ comment.author.name }}</span>
+                    <span class="comment-time">{{ formatCommentTime(comment.createdAt) }}</span>
                   </div>
                 </div>
+                <div class="comment-content">
+                  {{ comment.content }}
+                </div>
               </div>
-              
-              <!-- Пустые комментарии -->
-              <div v-else class="empty-comments">
-                <p>Пока нет комментариев</p>
-              </div>
+            </div>
+            
+            <!-- Пустые комментарии -->
+            <div v-else class="empty-comments">
+              <p>Пока нет комментариев</p>
+            </div>
 
-              <!-- Форма добавления комментария -->
-              <div class="add-comment-section">
-                <div class="comment-input-wrapper">
-                  <el-avatar :size="32" :src="currentUser.avatar" class="current-user-avatar" />
-                  <div class="comment-input-container">
-                    <el-input
-                      v-model="newComment"
-                      type="textarea"
-                      :rows="3"
-                      placeholder="Напишите комментарий..."
-                      class="comment-input"
-                    />
-                    <div class="comment-actions">
-                      <el-button 
-                        type="primary" 
-                        size="small" 
-                        @click="addComment"
-                        :disabled="!newComment.trim()"
-                      >
-                        Отправить
-                      </el-button>
-                    </div>
+            <!-- Форма добавления комментария -->
+            <div class="add-comment-section">
+              <div class="comment-input-wrapper">
+                <el-avatar :size="32" :src="currentUser.avatar" class="current-user-avatar" />
+                <div class="comment-input-container">
+                  <el-input
+                    v-model="newComment"
+                    type="textarea"
+                    :rows="3"
+                    placeholder="Напишите комментарий..."
+                    class="comment-input"
+                  />
+                  <div class="comment-actions">
+                    <el-button 
+                      type="primary" 
+                      size="small" 
+                      @click="addComment"
+                      :disabled="!newComment.trim()"
+                    >
+                      Отправить
+                    </el-button>
                   </div>
                 </div>
               </div>
@@ -555,33 +722,84 @@
       </div>
     </el-drawer>
 
-    <!-- Диалог выбора цвета для колонки -->
+    <!-- Диалоги (проекты, задачи, команда) -->
     <el-dialog 
-      v-model="colorPickerVisible" 
-      title="Выберите цвет колонки" 
+      v-model="projectDialogVisible" 
+      :title="editingProject ? 'Редактирование проекта' : 'Новый проект'" 
       width="400"
-      center
     >
-      <div class="color-picker">
-        <div 
-          v-for="color in columnColors"
-          :key="color"
-          class="color-option"
-          :style="{ backgroundColor: color }"
-          :class="{ active: selectedColumn?.color === color }"
-          @click="setColumnColor(color)"
-        ></div>
-      </div>
+      <el-form :model="projectForm" label-width="100px">
+        <el-form-item label="Название" required>
+          <el-input 
+            v-model="projectForm.name" 
+            placeholder="Введите название проекта"
+            maxlength="50"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="Описание">
+          <el-input 
+            v-model="projectForm.description" 
+            type="textarea"
+            placeholder="Описание проекта"
+            :rows="3"
+          />
+        </el-form-item>
+      </el-form>
+      
       <template #footer>
-        <el-button @click="colorPickerVisible = false">Отмена</el-button>
-        <el-button type="primary" @click="confirmColumnColor">
-          Применить
+        <el-button @click="projectDialogVisible = false">Отмена</el-button>
+        <el-button 
+          type="primary" 
+          @click="saveProject"
+          :disabled="!projectForm.name.trim()"
+        >
+          {{ editingProject ? 'Сохранить' : 'Создать' }}
         </el-button>
       </template>
     </el-dialog>
 
-    <!-- Остальные диалоги (добавление/редактирование задач, проектов) остаются без изменений -->
-    <!-- ... -->
+    <!-- Диалог добавления/редактирования участника команды -->
+    <el-dialog 
+      v-model="teamMemberDialogVisible" 
+      :title="editingTeamMember ? 'Редактирование участника' : 'Новый участник'" 
+      width="500"
+    >
+      <el-form :model="teamMemberForm" label-width="120px">
+        <el-form-item label="Имя" required>
+          <el-input v-model="teamMemberForm.name" placeholder="Введите имя" />
+        </el-form-item>
+        <el-form-item label="Должность" required>
+          <el-input v-model="teamMemberForm.role" placeholder="Введите должность" />
+        </el-form-item>
+        <el-form-item label="Фото">
+          <el-input v-model="teamMemberForm.avatar" placeholder="URL фото" />
+        </el-form-item>
+        <el-form-item label="Проекты">
+          <el-select v-model="teamMemberForm.projects" multiple placeholder="Выберите проекты">
+            <el-option 
+              v-for="project in projects" 
+              :key="project.id"
+              :label="project.name" 
+              :value="project.id" 
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      
+      <template #footer>
+        <el-button @click="teamMemberDialogVisible = false">Отмена</el-button>
+        <el-button 
+          type="primary" 
+          @click="saveTeamMember"
+          :disabled="!teamMemberForm.name.trim() || !teamMemberForm.role.trim()"
+        >
+          {{ editingTeamMember ? 'Сохранить' : 'Создать' }}
+        </el-button>
+      </template>
+    </el-dialog>
+
+    <!-- Остальные диалоги... -->
   </div>
 </template>
 
@@ -589,7 +807,7 @@
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { 
   Plus, Delete, Clock, Edit, Fold, Expand, Folder, Menu, ArrowDown, 
-  More, Brush, Close, Calendar, User 
+  More, Brush, Close, Calendar, User, VideoPlay, VideoPause, RefreshRight
 } from '@element-plus/icons-vue'
 import { formatDate, getTimeRemaining, isOverdue } from '../utils/dateUtils'
 import draggable from 'vuedraggable'
@@ -609,33 +827,48 @@ const currentUser = ref({
 // Состояние интерфейса
 const isSidebarCollapsed = ref(false)
 const activeView = ref('board')
+const activeNav = ref('projects')
 const hoveredColumn = ref(null)
 const detailDrawerVisible = ref(false)
-const colorPickerVisible = ref(false)
+const projectTitleEditing = ref(false)
+const projectDescriptionEditing = ref(false)
 
-// Цвета для колонок (палитра как в Notion)
-const columnColors = ref([
-  '#4F46E5', '#7C3AED', '#DB2777', '#DC2626', '#EA580C', 
-  '#D97706', '#65A30D', '#059669', '#0D9488', '#0891B2',
-  '#2563EB', '#4338CA', '#7DD3FC', '#FDA4AF', '#FDE68A'
-])
-
-// Выбранная колонка для изменения цвета
-const selectedColumn = ref(null)
-const columnInput = ref(null)
-
-// Новый комментарий
-const newComment = ref('')
+// Таймер для трекинга времени
+let timerInterval = null
 
 // Команда проекта
 const teamMembers = ref([
-  { id: 1, name: 'Алексей Иванов', avatar: '', role: 'Frontend Developer' },
-  { id: 2, name: 'Мария Петрова', avatar: '', role: 'UI/UX Designer' },
-  { id: 3, name: 'Дмитрий Сидоров', avatar: '', role: 'Backend Developer' },
-  { id: 4, name: 'Елена Козлова', avatar: '', role: 'Project Manager' }
+  { 
+    id: 1, 
+    name: 'Алексей Иванов', 
+    avatar: '', 
+    role: 'Frontend Developer',
+    projects: [1]
+  },
+  { 
+    id: 2, 
+    name: 'Мария Петрова', 
+    avatar: '', 
+    role: 'UI/UX Designer',
+    projects: [1]
+  },
+  { 
+    id: 3, 
+    name: 'Дмитрий Сидоров', 
+    avatar: '', 
+    role: 'Backend Developer',
+    projects: [1]
+  },
+  { 
+    id: 4, 
+    name: 'Елена Козлова', 
+    avatar: '', 
+    role: 'Project Manager',
+    projects: [1]
+  }
 ])
 
-// Состояние проектов (с цветами колонок и комментариями)
+// Состояние проектов
 const projects = ref([
   {
     id: 1,
@@ -651,7 +884,7 @@ const projects = ref([
           { 
             id: 1, 
             title: 'Прототип интерфейса', 
-            description: 'Создать прототип основного интерфейса в Figma с учетом пользовательского опыта и современных тенденций дизайна. Необходимо предусмотреть адаптивную верстку и доступность.', 
+            description: 'Создать прототип основного интерфейса в Figma с учетом пользовательского опыта и современных тенденций дизайна.', 
             priority: 'Высокий',
             deadline: '2024-12-31 18:00:00',
             createdAt: '2024-01-15 10:00:00',
@@ -659,93 +892,23 @@ const projects = ref([
             columnId: 'todo',
             assignee: { id: 2, name: 'Мария Петрова', avatar: '', role: 'UI/UX Designer' },
             creator: { id: 4, name: 'Елена Козлова', avatar: '', role: 'Project Manager' },
-            comments: [
-              {
-                id: 1,
-                content: 'Нужно добавить мобильную версию прототипа',
-                author: { id: 4, name: 'Елена Козлова', avatar: '' },
-                createdAt: '2024-01-15 14:30:00'
-              },
-              {
-                id: 2,
-                content: 'Уже работаю над адаптивной версией',
-                author: { id: 2, name: 'Мария Петрова', avatar: '' },
-                createdAt: '2024-01-15 16:45:00'
-              }
-            ]
-          }
-        ]
-      },
-      {
-        id: 'inProgress',
-        title: 'В работе',
-        color: '#D97706',
-        editing: false,
-        tasks: [
-          { 
-            id: 2, 
-            title: 'Разработать канбан-доску', 
-            description: 'Создать канбан-доску на Vue 3 и Element Plus с drag-and-drop функционалом, responsive design и локальным хранилищем. Реализовать различные представления данных.', 
-            priority: 'Высокий',
-            deadline: '2024-01-20 23:59:00',
-            createdAt: '2024-01-10 14:20:00',
-            updatedAt: '2024-01-15 11:30:00',
-            columnId: 'inProgress',
-            assignee: { id: 1, name: 'Алексей Иванов', avatar: '', role: 'Frontend Developer' },
-            creator: { id: 4, name: 'Елена Козлова', avatar: '', role: 'Project Manager' },
+            timeEstimate: { hours: 8, minutes: 0 },
+            timeTracked: { hours: 0, minutes: 0, seconds: 0 },
+            timerRunning: false,
+            subtasks: [
+              { id: 1, title: 'Создать вайрфреймы', completed: true },
+              { id: 2, title: 'Разработать цветовую схему', completed: false },
+              { id: 3, title: 'Создать адаптивную версию', completed: false }
+            ],
+            checklist: [
+              { id: 1, text: 'Проверить usability', completed: false },
+              { id: 2, text: 'Согласовать с заказчиком', completed: false }
+            ],
             comments: []
           }
         ]
       },
-      {
-        id: 'review',
-        title: 'Ревью',
-        color: '#0891B2',
-        editing: false,
-        tasks: [
-          { 
-            id: 3, 
-            title: 'Тестирование API', 
-            description: 'Протестировать endpoints REST API на корректность работы, производительность и безопасность. Проверить обработку ошибок и граничные случаи.', 
-            priority: 'Средний',
-            deadline: '2024-01-18 17:00:00',
-            createdAt: '2024-01-12 13:15:00',
-            updatedAt: '2024-01-15 16:45:00',
-            columnId: 'review',
-            assignee: { id: 3, name: 'Дмитрий Сидоров', avatar: '', role: 'Backend Developer' },
-            creator: { id: 1, name: 'Алексей Иванов', avatar: '', role: 'Frontend Developer' },
-            comments: [
-              {
-                id: 3,
-                content: 'Нашел несколько проблем с валидацией входных данных',
-                author: { id: 3, name: 'Дмитрий Сидоров', avatar: '' },
-                createdAt: '2024-01-16 09:20:00'
-              }
-            ]
-          }
-        ]
-      },
-      {
-        id: 'done',
-        title: 'Готово',
-        color: '#059669',
-        editing: false,
-        tasks: [
-          { 
-            id: 4, 
-            title: 'Настройка проекта', 
-            description: 'Инициализировать Vue приложение и настроить базовую структуру проекта с роутингом и состоянием. Настроить инструменты разработки и CI/CD.', 
-            priority: 'Низкий',
-            deadline: '2024-01-12 17:00:00',
-            createdAt: '2024-01-08 13:15:00',
-            updatedAt: '2024-01-12 16:45:00',
-            columnId: 'done',
-            assignee: { id: 1, name: 'Алексей Иванов', avatar: '', role: 'Frontend Developer' },
-            creator: { id: 1, name: 'Алексей Иванов', avatar: '', role: 'Frontend Developer' },
-            comments: []
-          }
-        ]
-      }
+      // ... остальные колонки
     ]
   }
 ])
@@ -755,275 +918,204 @@ const currentProject = ref(projects.value[0])
 
 // Состояние UI
 const projectDialogVisible = ref(false)
-const deleteProjectDialogVisible = ref(false)
+const teamMemberDialogVisible = ref(false)
 const addTaskDialogVisible = ref(false)
 const editDialogVisible = ref(false)
 const deleteColumnDialogVisible = ref(false)
 
 // Формы и временные данные
 const projectForm = ref({ name: '', description: '' })
+const teamMemberForm = ref({ name: '', role: '', avatar: '', projects: [] })
 const editingProject = ref(null)
+const editingTeamMember = ref(null)
 const projectToDelete = ref(null)
 const columnToDelete = ref(null)
 const currentColumnId = ref('')
 const currentTask = ref(null)
 const editingTask = ref(null)
+const newComment = ref('')
 
-const newTask = ref({
-  title: '',
-  description: '',
-  priority: 'Средний',
-  deadline: null,
-  assignee: null
-})
-
-// Вычисляемые свойства
-const getCurrentColumnTitle = computed(() => {
-  if (!currentProject.value) return ''
-  const column = currentProject.value.columns.find(col => col.id === currentColumnId.value)
-  return column ? column.title : ''
-})
-
-const getProjectStats = (project) => {
-  const totalTasks = project.columns.reduce((sum, column) => sum + column.tasks.length, 0)
-  const completedTasks = project.columns.find(col => col.id === 'done')?.tasks.length || 0
-  return `${completedTasks}/${totalTasks}`
-}
-
-// Методы для колонок
-function startEditingColumn(column) {
-  column.editing = true
-  nextTick(() => {
-    if (columnInput.value) {
-      columnInput.value.focus()
-    }
-  })
-}
-
-function finishEditingColumn(column) {
-  column.editing = false
-  if (!column.title.trim()) {
-    column.title = 'Без названия'
-  }
-  saveToLocalStorage()
-}
-
-function openColorPicker(column) {
-  selectedColumn.value = column
-  colorPickerVisible.value = true
-}
-
-function setColumnColor(color) {
-  if (selectedColumn.value) {
-    selectedColumn.value.color = color
-  }
-}
-
-function confirmColumnColor() {
-  colorPickerVisible.value = false
-  saveToLocalStorage()
-}
-
-function handleColumnCommand(command, column) {
-  switch (command) {
-    case 'changeColor':
-      openColorPicker(column)
-      break
-    case 'addTask':
-      openAddTaskDialog(column.id)
-      break
-    case 'deleteColumn':
-      openDeleteColumnDialog(column)
-      break
-  }
-}
-
-// Методы для задач
-function openTaskDetails(task) {
-  currentTask.value = { ...task }
-  detailDrawerVisible.value = true
-  newComment.value = ''
-}
-
-function closeTaskDetails() {
-  detailDrawerVisible.value = false
-  currentTask.value = null
-  newComment.value = ''
-}
-
-function addComment() {
-  if (!newComment.value.trim() || !currentTask.value) return
-
-  const comment = {
-    id: Date.now(),
-    content: newComment.value.trim(),
-    author: { ...currentUser.value },
-    createdAt: new Date().toISOString().slice(0, 19).replace('T', ' ')
-  }
-
-  if (!currentTask.value.comments) {
-    currentTask.value.comments = []
+// Таймер для трекинга времени
+function toggleTimer() {
+  if (!currentTask.value) return
+  
+  currentTask.value.timerRunning = !currentTask.value.timerRunning
+  
+  if (currentTask.value.timerRunning) {
+    startTimer()
+  } else {
+    stopTimer()
   }
   
-  currentTask.value.comments.push(comment)
-  newComment.value = ''
-  
-  // Обновляем задачу в основном хранилище
   updateTask(currentTask.value)
 }
 
-function formatCommentTime(dateString) {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffMs = now - date
-  const diffMins = Math.floor(diffMs / (1000 * 60))
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-
-  if (diffMins < 1) return 'только что'
-  if (diffMins < 60) return `${diffMins} мин. назад`
-  if (diffHours < 24) return `${diffHours} ч. назад`
-  if (diffDays === 1) return 'вчера'
-  if (diffDays < 7) return `${diffDays} д. назад`
-  
-  return formatDate(dateString)
+function startTimer() {
+  timerInterval = setInterval(() => {
+    if (currentTask.value && currentTask.value.timerRunning) {
+      currentTask.value.timeTracked.seconds++
+      
+      if (currentTask.value.timeTracked.seconds >= 60) {
+        currentTask.value.timeTracked.seconds = 0
+        currentTask.value.timeTracked.minutes++
+      }
+      
+      if (currentTask.value.timeTracked.minutes >= 60) {
+        currentTask.value.timeTracked.minutes = 0
+        currentTask.value.timeTracked.hours++
+      }
+    }
+  }, 1000)
 }
 
-function getAssigneeRole(assignee) {
-  return teamMembers.value.find(member => member.id === assignee.id)?.role || ''
-}
-
-function getStatusType(columnId) {
-  const statusTypes = {
-    'todo': 'info',
-    'inProgress': 'warning',
-    'review': 'primary',
-    'done': 'success'
+function stopTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval)
+    timerInterval = null
   }
-  return statusTypes[columnId] || 'info'
+}
+
+function resetTimer() {
+  if (currentTask.value) {
+    currentTask.value.timeTracked = { hours: 0, minutes: 0, seconds: 0 }
+    currentTask.value.timerRunning = false
+    stopTimer()
+    updateTask(currentTask.value)
+  }
+}
+
+function formatTrackedTime(time) {
+  return `${time.hours.toString().padStart(2, '0')}:${time.minutes.toString().padStart(2, '0')}:${time.seconds.toString().padStart(2, '0')}`
+}
+
+// Подзадачи
+function addSubtask() {
+  if (!currentTask.value) return
+  
+  if (!currentTask.value.subtasks) {
+    currentTask.value.subtasks = []
+  }
+  
+  currentTask.value.subtasks.push({
+    id: Date.now(),
+    title: 'Новая подзадача',
+    completed: false
+  })
+  
+  updateTask(currentTask.value)
+}
+
+function updateSubtask(subtask) {
+  updateTask(currentTask.value)
+}
+
+function removeSubtask(index) {
+  if (currentTask.value && currentTask.value.subtasks) {
+    currentTask.value.subtasks.splice(index, 1)
+    updateTask(currentTask.value)
+  }
+}
+
+// Чек-лист
+function addChecklistItem() {
+  if (!currentTask.value) return
+  
+  if (!currentTask.value.checklist) {
+    currentTask.value.checklist = []
+  }
+  
+  currentTask.value.checklist.push({
+    id: Date.now(),
+    text: 'Новый пункт',
+    completed: false
+  })
+  
+  updateTask(currentTask.value)
+}
+
+function updateChecklistItem(item) {
+  updateTask(currentTask.value)
+}
+
+function removeChecklistItem(index) {
+  if (currentTask.value && currentTask.value.checklist) {
+    currentTask.value.checklist.splice(index, 1)
+    updateTask(currentTask.value)
+  }
+}
+
+// Управление проектами
+function startEditingProjectTitle() {
+  projectTitleEditing.value = true
+  nextTick(() => {
+    if (projectTitleInput.value) {
+      projectTitleInput.value.focus()
+    }
+  })
+}
+
+function finishEditingProjectTitle() {
+  projectTitleEditing.value = false
+  saveToLocalStorage()
+}
+
+function startEditingProjectDescription() {
+  projectDescriptionEditing.value = true
+  nextTick(() => {
+    if (projectDescriptionInput.value) {
+      projectDescriptionInput.value.focus()
+    }
+  })
+}
+
+function finishEditingProjectDescription() {
+  projectDescriptionEditing.value = false
+  saveToLocalStorage()
+}
+
+// Управление командой
+function openAddTeamMemberDialog() {
+  teamMemberForm.value = { name: '', role: '', avatar: '', projects: [] }
+  editingTeamMember.value = null
+  teamMemberDialogVisible.value = true
+}
+
+function openEditTeamMemberDialog(member) {
+  teamMemberForm.value = { ...member }
+  editingTeamMember.value = member
+  teamMemberDialogVisible.value = true
+}
+
+function saveTeamMember() {
+  if (!teamMemberForm.value.name.trim() || !teamMemberForm.value.role.trim()) return
+
+  if (editingTeamMember.value) {
+    Object.assign(editingTeamMember.value, teamMemberForm.value)
+  } else {
+    const newMember = {
+      id: Date.now(),
+      ...teamMemberForm.value
+    }
+    teamMembers.value.push(newMember)
+  }
+
+  teamMemberDialogVisible.value = false
+  saveToLocalStorage()
+}
+
+function getProjectName(projectId) {
+  const project = projects.value.find(p => p.id === projectId)
+  return project ? project.name : 'Неизвестный проект'
 }
 
 // Остальные методы остаются без изменений...
-// (handleUserCommand, toggleSidebar, selectProject, openAddProjectDialog, saveProject, 
-//  addTask, updateTask, deleteTask, editTask, saveTask, и все вспомогательные методы)
-
-// Вспомогательные методы (без изменений)
-function getPriorityType(priority) {
-  switch (priority) {
-    case 'Критичный': return 'danger'
-    case 'Высокий': return 'warning'
-    case 'Средний': return 'primary'
-    case 'Низкий': return 'success'
-    default: return 'info'
-  }
-}
-
-function getTimeRemainingType(deadline) {
-  if (!deadline) return 'info'
-  const timeRemaining = getTimeRemaining(deadline)
-  if (timeRemaining?.expired) return 'danger'
-  
-  const deadlineDate = new Date(deadline)
-  const now = new Date()
-  const diffHours = (deadlineDate - now) / (1000 * 60 * 60)
-  
-  if (diffHours < 24) return 'warning'
-  if (diffHours < 72) return 'primary'
-  return 'success'
-}
-
-function getTimeRemainingText(deadline) {
-  const timeRemaining = getTimeRemaining(deadline)
-  return timeRemaining ? timeRemaining.text : 'Без срока'
-}
-
-function getColumnTitleById(columnId) {
-  if (!currentProject.value) return 'Неизвестно'
-  const column = currentProject.value.columns.find(col => col.id === columnId)
-  return column ? column.title : 'Неизвестно'
-}
-
-function calculateTimeInProgress(task) {
-  if (!task.createdAt) return 'Неизвестно'
-  
-  const created = new Date(task.createdAt)
-  const now = new Date()
-  const diffMs = now - created
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-  const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-  
-  if (diffDays > 0) {
-    return `${diffDays} д. ${diffHours} ч.`
-  } else {
-    return `${diffHours} ч.`
-  }
-}
-
-function getTimeSinceCreation(task) {
-  if (!task.createdAt) return 'Неизвестно'
-  
-  const created = new Date(task.createdAt)
-  const now = new Date()
-  const diffMs = now - created
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-  
-  if (diffDays === 0) return 'Сегодня'
-  if (diffDays === 1) return '1 день назад'
-  if (diffDays < 7) return `${diffDays} дня назад`
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} нед. назад`
-  
-  return `${Math.floor(diffDays / 30)} мес. назад`
-}
-
-// Локальное хранилище
-function saveToLocalStorage() {
-  localStorage.setItem('kanban-projects', JSON.stringify(projects.value))
-  localStorage.setItem('kanban-team-members', JSON.stringify(teamMembers.value))
-  localStorage.setItem('kanban-current-user', JSON.stringify(currentUser.value))
-}
-
-function loadFromLocalStorage() {
-  const savedProjects = localStorage.getItem('kanban-projects')
-  const savedTeam = localStorage.getItem('kanban-team-members')
-  const savedUser = localStorage.getItem('kanban-current-user')
-  
-  if (savedProjects) {
-    try {
-      projects.value = JSON.parse(savedProjects)
-      currentProject.value = projects.value[0] || null
-    } catch (e) {
-      console.error('Error loading projects from localStorage:', e)
-    }
-  }
-  
-  if (savedTeam) {
-    try {
-      teamMembers.value = JSON.parse(savedTeam)
-    } catch (e) {
-      console.error('Error loading team from localStorage:', e)
-    }
-  }
-  
-  if (savedUser) {
-    try {
-      currentUser.value = JSON.parse(savedUser)
-    } catch (e) {
-      console.error('Error loading user from localStorage:', e)
-    }
-  }
-}
 
 onMounted(() => {
   loadFromLocalStorage()
-  
-  // Таймер для обновления времени
-  const timeUpdateInterval = setInterval(() => {
-    projects.value = [...projects.value]
-  }, 60000)
-  
-  onUnmounted(() => {
-    clearInterval(timeUpdateInterval)
-  })
+})
+
+onUnmounted(() => {
+  stopTimer()
 })
 </script>
 
@@ -1031,18 +1123,18 @@ onMounted(() => {
 .app-container {
   display: flex;
   height: 100vh;
-  background-color: #f5f7fa;
+  background-color: white;
 }
 
-/* Сайдбар (без изменений) */
+/* Сайдбар */
 .sidebar {
   width: 280px;
   background: white;
-  border-right: 1px solid #e0e0e0;
   display: flex;
   flex-direction: column;
   transition: all 0.3s ease;
   flex-shrink: 0;
+  border-right: 1px solid #f0f0f0;
 }
 
 .sidebar.collapsed {
@@ -1054,7 +1146,7 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 16px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #f0f0f0;
   min-height: 60px;
 }
 
@@ -1068,10 +1160,73 @@ onMounted(() => {
   margin-left: auto;
 }
 
+.user-section {
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-weight: 500;
+  color: #303133;
+}
+
+.user-role {
+  font-size: 12px;
+  color: #909399;
+}
+
 .sidebar-content {
   flex: 1;
   padding: 16px;
   overflow-y: auto;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #606266;
+}
+
+.nav-item:hover {
+  background-color: #f5f7fa;
+  color: #409eff;
+}
+
+.nav-item.active {
+  background-color: #ecf5ff;
+  color: #409eff;
+}
+
+.sidebar-panel {
+  flex: 1;
+}
+
+.projects-section,
+.team-section {
+  height: 100%;
 }
 
 .section-header {
@@ -1137,20 +1292,67 @@ onMounted(() => {
   color: #909399;
 }
 
-.project-actions {
+.icon-btn {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.team-list {
   display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.team-member {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.team-member:hover {
+  background-color: #f5f7fa;
+}
+
+.member-info {
+  flex: 1;
+}
+
+.member-name {
+  display: block;
+  font-weight: 500;
+  color: #303133;
+}
+
+.member-role {
+  font-size: 12px;
+  color: #909399;
+  margin-bottom: 4px;
+}
+
+.member-projects {
+  display: flex;
+  flex-wrap: wrap;
   gap: 4px;
+}
+
+.project-tag {
+  font-size: 10px;
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #666;
+}
+
+.member-actions {
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
-.project-item:hover .project-actions {
+.team-member:hover .member-actions {
   opacity: 1;
-}
-
-.icon-btn {
-  width: 100%;
-  margin-bottom: 8px;
 }
 
 /* Основной контент */
@@ -1160,93 +1362,78 @@ onMounted(() => {
   flex-direction: column;
   overflow: hidden;
   transition: margin-left 0.3s ease;
+  margin-left: 120px; /* Отступ от сайдбара */
 }
 
 .main-content.sidebar-collapsed {
-  margin-left: -220px;
-}
-
-/* Шапка */
-.top-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 24px;
-  background: white;
-  border-bottom: 1px solid #e0e0e0;
-  height: 60px;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.app-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #303133;
-}
-
-.user-menu {
-  display: flex;
-  align-items: center;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.user-info:hover {
-  background-color: #f5f7fa;
-}
-
-.user-name {
-  font-weight: 500;
-  color: #303133;
+  margin-left: 120px;
 }
 
 .project-header {
-  padding: 20px 24px 0;
+  padding: 24px 32px 0;
   background: white;
-  border-bottom: 1px solid #e0e0e0;
 }
 
-.project-title-input {
-  font-size: 28px;
-  font-weight: 600;
+.project-title-section {
+  max-width: 800px;
+}
+
+.project-title-display,
+.project-description-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
   margin-bottom: 8px;
+}
+
+.project-title-display:hover,
+.project-description-display:hover {
+  background-color: #f5f7fa;
+}
+
+.project-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.project-description {
+  font-size: 16px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.project-title-input,
+.project-description-input {
+  margin-bottom: 16px;
 }
 
 .project-title-input :deep(.el-input__inner) {
   border: none;
-  font-size: 28px;
-  font-weight: 600;
+  font-size: 32px;
+  font-weight: 700;
   padding: 0;
   background: transparent;
-  color: #303133;
-}
-
-.project-description-input {
-  margin-bottom: 16px;
+  color: #1f2937;
 }
 
 .project-description-input :deep(.el-textarea__inner) {
   border: none;
   padding: 0;
   background: transparent;
-  color: #606266;
+  color: #6b7280;
   resize: none;
+  font-size: 16px;
 }
 
-.project-title-placeholder {
+.project-placeholder h1 {
   color: #909399;
   font-size: 24px;
   margin: 0;
@@ -1258,12 +1445,17 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  padding: 0 32px;
 }
 
 .view-tabs :deep(.el-tabs) {
   flex: 1;
   display: flex;
   flex-direction: column;
+}
+
+.view-tabs :deep(.el-tabs__header) {
+  margin-bottom: 0;
 }
 
 .view-tabs :deep(.el-tabs__content) {
@@ -1285,14 +1477,14 @@ onMounted(() => {
 
 .board {
   flex: 1;
-  padding: 20px;
+  padding: 20px 0;
   overflow-x: auto;
-  background: #f8f9fa;
+  background: white;
 }
 
 .columns-container {
   display: flex;
-  gap: 16px;
+  gap: 20px;
   height: 100%;
   align-items: flex-start;
   min-width: min-content;
@@ -1305,19 +1497,13 @@ onMounted(() => {
 }
 
 .column {
-  background: white;
+  background: color-mix(in srgb, var(--column-color) 5%, white);
   border-radius: 12px;
   padding: 16px;
   height: 100%;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  border: 1px solid #e0e0e0;
-  transition: all 0.3s ease;
-}
-
-.column:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border: 1px solid color-mix(in srgb, var(--column-color) 15%, white);
 }
 
 .column-header {
@@ -1326,7 +1512,7 @@ onMounted(() => {
   align-items: flex-start;
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid color-mix(in srgb, var(--column-color) 10%, white);
 }
 
 .column-title-section {
@@ -1363,7 +1549,7 @@ onMounted(() => {
 }
 
 .column-title-display:hover {
-  background-color: #f5f7fa;
+  background-color: color-mix(in srgb, var(--column-color) 8%, transparent);
 }
 
 .column-title {
@@ -1380,6 +1566,11 @@ onMounted(() => {
   color: #909399;
   font-weight: 500;
   flex-shrink: 0;
+  background: color-mix(in srgb, var(--column-color) 15%, white);
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 20px;
+  text-align: center;
 }
 
 .column-title-input {
@@ -1410,15 +1601,14 @@ onMounted(() => {
   background: white;
   border-radius: 8px;
   padding: 12px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
   cursor: pointer;
   transition: all 0.3s ease;
   border: 1px solid #e0e0e0;
-  border-left: 3px solid #409eff;
+  border-left: 3px solid var(--column-color, #409eff);
 }
 
 .task-card:hover {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   transform: translateY(-1px);
 }
 
@@ -1440,19 +1630,13 @@ onMounted(() => {
 
 .task-meta {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .assignee-info {
   display: flex;
   align-items: center;
-  gap: 6px;
-}
-
-.assignee-name {
-  font-size: 12px;
-  color: #606266;
 }
 
 .task-tags {
@@ -1477,7 +1661,7 @@ onMounted(() => {
 .column-footer {
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid color-mix(in srgb, var(--column-color) 10%, white);
   text-align: center;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -1488,7 +1672,7 @@ onMounted(() => {
 }
 
 .add-column-section {
-  margin-left: 16px;
+  margin-left: 20px;
   flex-shrink: 0;
 }
 
@@ -1514,6 +1698,7 @@ onMounted(() => {
 /* Боковая панель деталей задачи */
 .task-detail-drawer :deep(.el-drawer) {
   border-radius: 12px 0 0 12px;
+  width: 40% !important;
 }
 
 .task-detail-drawer :deep(.el-drawer__body) {
@@ -1547,7 +1732,7 @@ onMounted(() => {
 }
 
 .task-title-section {
-  margin-bottom: 32px;
+  margin-bottom: 24px;
   padding-top: 16px;
 }
 
@@ -1559,69 +1744,120 @@ onMounted(() => {
   line-height: 1.3;
 }
 
-.task-properties {
+/* Трекинг времени */
+.time-tracking-section {
+  margin-bottom: 24px;
+}
+
+.time-tracking-card {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+}
+
+.time-display {
   display: flex;
-  flex-direction: column;
-  gap: 32px;
-}
-
-.property-group {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.property-group-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #374151;
-  margin: 0;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.property-item {
-  display: flex;
-  gap: 16px;
-  padding: 8px 0;
-}
-
-.property-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: #6b7280;
-  width: 120px;
-  flex-shrink: 0;
-  line-height: 32px;
-}
-
-.property-value {
-  flex: 1;
-  min-height: 32px;
-  display: flex;
+  justify-content: space-between;
   align-items: center;
 }
 
-.user-display {
+.time-estimate,
+.time-tracked {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.time-estimate label,
+.time-tracked label {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.time-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.time-input-group :deep(.el-input-number) {
+  width: 80px;
+}
+
+.tracked-time {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
+.time-value {
+  font-family: 'Courier New', monospace;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.timer-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.timer-controls :deep(.el-button) {
+  transition: all 0.3s ease;
+}
+
+.timer-controls :deep(.el-button.active) {
+  background-color: #f56c6c;
+  border-color: #f56c6c;
+}
+
+/* Свойства задачи */
+.task-properties {
+  margin-bottom: 24px;
+}
+
+.property-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.property-item {
+  flex: 1;
+}
+
+.property-item.full-width {
+  flex: 0 0 100%;
+}
+
+.property-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.property-value {
+  min-height: auto;
+}
+
+.user-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .user-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
 }
 
 .user-name {
   font-weight: 500;
   color: #374151;
-}
-
-.user-role {
-  font-size: 12px;
-  color: #9ca3af;
 }
 
 .empty-value {
@@ -1633,7 +1869,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
+  padding: 8px 12px;
   background: #f8fafc;
   border-radius: 6px;
   border: 1px solid #e5e7eb;
@@ -1655,6 +1891,77 @@ onMounted(() => {
 .date-value {
   color: #6b7280;
   font-size: 14px;
+  padding: 8px 0;
+}
+
+/* Подзадачи и чек-лист */
+.subtasks-section,
+.checklist-section {
+  margin-bottom: 24px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.subtasks-list,
+.checklist-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.subtask-item,
+.checklist-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+:deep(.el-checkbox) {
+  flex: 1;
+}
+
+:deep(.el-checkbox__label) {
+  color: #374151;
+}
+
+.completed {
+  text-decoration: line-through;
+  color: #9ca3af !important;
+}
+
+.empty-subtasks,
+.empty-checklist {
+  text-align: center;
+  padding: 20px;
+  color: #9ca3af;
+}
+
+/* Описание */
+.description-section {
+  margin-bottom: 24px;
+}
+
+.description-section h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
 }
 
 .task-description-content {
@@ -1677,37 +1984,23 @@ onMounted(() => {
   font-style: italic;
 }
 
-.time-tracking {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.time-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px;
-  background: #f8fafc;
-  border-radius: 6px;
-}
-
-.time-label {
-  font-weight: 500;
-  color: #6b7280;
-}
-
-.time-value {
-  color: #3b82f6;
-  font-weight: 600;
-}
-
 /* Комментарии */
+.comments-section {
+  margin-bottom: 24px;
+}
+
 .comments-header {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 16px;
+}
+
+.comments-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
 }
 
 .comments-count {
@@ -1805,32 +2098,6 @@ onMounted(() => {
   justify-content: flex-end;
 }
 
-/* Выбор цвета */
-.color-picker {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
-  padding: 16px 0;
-}
-
-.color-option {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: 3px solid transparent;
-}
-
-.color-option:hover {
-  transform: scale(1.1);
-}
-
-.color-option.active {
-  border-color: #3b82f6;
-  transform: scale(1.1);
-}
-
 /* Адаптивность */
 @media (max-width: 1200px) {
   .sidebar {
@@ -1848,6 +2115,10 @@ onMounted(() => {
   .task-detail-drawer :deep(.el-drawer) {
     width: 50% !important;
   }
+  
+  .main-content {
+    margin-left: 100px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -1857,24 +2128,18 @@ onMounted(() => {
     top: 0;
     height: 100%;
     z-index: 1000;
-    transform: translateX(-100%);
-  }
-  
-  .sidebar.collapsed {
-    transform: translateX(0);
-    width: 60px;
   }
   
   .main-content {
     margin-left: 0 !important;
   }
   
-  .top-header {
-    padding: 12px 16px;
+  .project-header {
+    padding: 16px;
   }
   
-  .user-name {
-    display: none;
+  .view-tabs {
+    padding: 0 16px;
   }
   
   .columns-container {
@@ -1900,21 +2165,20 @@ onMounted(() => {
     width: 90% !important;
   }
   
-  .property-item {
+  .property-row {
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
   }
   
-  .property-label {
-    width: auto;
+  .time-display {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
   }
   
-  .time-tracking {
-    grid-template-columns: 1fr;
-  }
-  
-  .color-picker {
-    grid-template-columns: repeat(3, 1fr);
+  .tracked-time {
+    width: 100%;
+    justify-content: space-between;
   }
 }
 </style>

@@ -39,3 +39,30 @@ export const isOverdue = (deadline) => {
   if (!deadline) return false
   return new Date(deadline) < new Date()
 }
+
+export const formatCommentTime = (dateString) => {
+  if (!dateString) return 'Неизвестно'
+  
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffMs = now - date
+  const diffMins = Math.floor(diffMs / (1000 * 60))
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+  if (diffMins < 1) return 'только что'
+  if (diffMins < 60) return `${diffMins} мин. назад`
+  if (diffHours < 24) return `${diffHours} ч. назад`
+  if (diffDays === 1) return 'вчера'
+  if (diffDays < 7) return `${diffDays} д. назад`
+  
+  return formatDate(dateString)
+}
+
+export const getMonthName = (monthIndex) => {
+  const months = [
+    'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+    'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+  ]
+  return months[monthIndex]
+}
