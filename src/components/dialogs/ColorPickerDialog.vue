@@ -2,41 +2,32 @@
   <el-dialog
     v-model="dialogVisible"
     title="Выбор цвета"
-    width="400"
+    width="400px"
     @close="handleClose"
   >
     <div class="color-picker">
-      <div class="color-grid">
-        <div
-          v-for="color in availableColors"
-          :key="color"
-          class="color-option"
-          :style="{ backgroundColor: color }"
-          :class="{ selected: selectedColor === color }"
-          @click="selectColor(color)"
-        >
-          <el-icon v-if="selectedColor === color"><Check /></el-icon>
-        </div>
-      </div>
-      
-      <div class="custom-color">
-        <label>Пользовательский цвет:</label>
-        <el-color-picker v-model="customColor" @change="selectCustomColor" />
-        <span class="color-value">{{ customColor }}</span>
+      <div
+        v-for="color in availableColors"
+        :key="color"
+        class="color-option"
+        :style="{ backgroundColor: color }"
+        @click="selectColor(color)"
+      >
+        <el-icon v-if="color === selectedColor" class="check-icon">
+          <Check />
+        </el-icon>
       </div>
     </div>
     
     <template #footer>
       <el-button @click="handleClose">Отмена</el-button>
-      <el-button type="primary" @click="confirmColor">
-        Применить
-      </el-button>
+      <el-button type="primary" @click="confirmColor">Выбрать</el-button>
     </template>
   </el-dialog>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { Check } from '@element-plus/icons-vue'
 
 const props = defineProps({
@@ -51,32 +42,19 @@ const dialogVisible = computed({
   set: (value) => emit('update:modelValue', value)
 })
 
+const selectedColor = ref(props.currentColor || '#409EFF')
 const availableColors = ref([
   '#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399',
   '#4F46E5', '#8B5CF6', '#06B6D4', '#10B981', '#F59E0B',
-  '#EF4444', '#3B82F6', '#6366F1', '#8B5CF6', '#EC4899'
+  '#EF4444', '#8B5CF6', '#3B82F6', '#10B981', '#F59E0B'
 ])
 
-const selectedColor = ref('#409EFF')
-const customColor = ref('')
-
-// Инициализация выбранного цвета
-watch(() => props.modelValue, (visible) => {
-  if (visible) {
-    selectedColor.value = props.currentColor || '#409EFF'
-    customColor.value = props.currentColor || ''
-  }
+watch(() => props.currentColor, (newColor) => {
+  selectedColor.value = newColor
 })
 
 function selectColor(color) {
   selectedColor.value = color
-  customColor.value = color
-}
-
-function selectCustomColor(color) {
-  if (color) {
-    selectedColor.value = color
-  }
 }
 
 function confirmColor() {
@@ -91,15 +69,10 @@ function handleClose() {
 
 <style scoped>
 .color-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.color-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 8px;
+  padding: 16px 0;
 }
 
 .color-option {
@@ -118,31 +91,8 @@ function handleClose() {
   transform: scale(1.1);
 }
 
-.color-option.selected {
-  border-color: var(--text-primary);
-}
-
-.color-option .el-icon {
+.check-icon {
   color: white;
-  font-size: 16px;
-  font-weight: bold;
-}
-
-.custom-color {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.custom-color label {
-  font-size: 14px;
-  color: var(--text-primary);
-  min-width: 120px;
-}
-
-.color-value {
-  font-family: 'Courier New', monospace;
-  font-size: 12px;
-  color: var(--text-muted);
+  font-size: 18px;
 }
 </style>

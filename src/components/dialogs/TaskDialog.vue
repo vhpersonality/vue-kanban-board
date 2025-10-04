@@ -53,7 +53,7 @@
       <el-row :gutter="20">
         <el-col :span="12">
           <el-form-item label="Исполнитель">
-            <el-select v-model="form.assignee" placeholder="Выберите исполнителя" filterable>
+            <el-select v-model="form.assignee" placeholder="Выберите исполнителя" filterable clearable>
               <el-option label="Не назначен" :value="null" />
               <el-option 
                 v-for="member in teamMembers"

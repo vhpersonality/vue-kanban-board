@@ -1,3 +1,10 @@
+// В начале файла с другими импортами
+import ProjectDialog from './dialogs/ProjectDialog.vue'
+import TeamMemberDialog from './dialogs/TeamMemberDialog.vue'
+import TaskDialog from './dialogs/TaskDialog.vue'
+import ColorPickerDialog from './dialogs/ColorPickerDialog.vue'
+import QuickSwitcher from './QuickSwitcher.vue'
+import TaskDetailPanel from './TaskDetailPanel.vue'
 <template>
   <div class="app-container">
     <!-- Кнопка переключения темы -->

@@ -34,7 +34,8 @@
       </el-form-item>
 
       <el-form-item label="Цвет" v-if="project">
-        <color-picker v-model="form.color" />
+        <div class="color-preview" :style="{ backgroundColor: form.color }"></div>
+        <el-color-picker v-model="form.color" />
       </el-form-item>
 
       <el-form-item label="Члены команды" v-if="project">
@@ -145,3 +146,14 @@ function handleClose() {
   }
 }
 </script>
+
+<style scoped>
+.color-preview {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  margin-right: 10px;
+  display: inline-block;
+  vertical-align: middle;
+}
+</style>
