@@ -1,11 +1,37 @@
 import { ref, computed } from 'vue'
 import { useProjectsStore } from '../stores/projects'
+import { useLocalStorage } from './useLocalStorage'
 
 export function useProjects() {
   const store = useProjectsStore()
+  const { get, set } = useLocalStorage()
 
-  // Аналитика проектов
-  const projectMetrics = computed(() => {
+  // Загрузка проектов при инициализации
+  const loadProjects = () => {
+    const savedProjects = get('projects')
+    if (savedProjects && savedProjects.length > 0) {
+      store.setProjects(savedProjects)
+    }
+  }
+
+  // Автосохранение при изменениях
+  const autoSave = computed(() => {
+    return {
+      projects: store.projects,
+      currentProject: store.currentProject,
+      teamMembers: store.teamMembers
+    }
+  })
+
+  // Следим за изменениями и сохраняем
+  watch(autoSave, (newValue) => {
+    set('projects', newValue.projects)
+    set('currentProject', newValue.currentProject)
+    set('teamMembers', newValue.teamMembers)
+  }, { deep: true })
+
+  // Статистика проектов
+  const projectsStats = computed(() => {
     return store.projects.map(project => {
       const totalTasks = project.columns.reduce((sum, column) => sum + column.tasks.length, 0)
       const completedTasks = project.columns.find(col => col.id === 'done')?.tasks.length || 0
@@ -15,71 +41,77 @@ export function useProjects() {
         ...project,
         totalTasks,
         completedTasks,
-        completionRate,
-        teamMembers: store.teamMembers.filter(member => 
-          member.projects?.includes(project.id)
-        )
+        completionRate
       }
     })
   })
 
-  // Продуктивность команды
-  const teamProductivity = computed(() => {
-    return store.teamMembers.map(member => {
-      const memberTasks = store.myTasks.value.filter(task => 
-        task.assignee?.id === member.id
-      )
-      
-      const completedTasks = memberTasks.filter(task => task.columnId === 'done').length
-      const completionRate = memberTasks.length > 0 ? 
-        Math.round((completedTasks / memberTasks.length) * 100) : 0
+  // Поиск проектов
+  const searchProjects = (query) => {
+    if (!query) return store.projects
+    return store.projects.filter(project =>
+      project.name.toLowerCase().includes(query.toLowerCase()) ||
+      project.description?.toLowerCase().includes(query.toLowerCase())
+    )
+  }
 
-      return {
-        ...member,
-        taskCount: memberTasks.length,
-        completedTasks,
-        completionRate,
-        projects: member.projects?.map(projectId => 
-          store.projects.find(p => p.id === projectId)?.name
-        ).filter(Boolean) || []
-      }
-    })
-  })
+  // Экспорт проекта
+  const exportProject = (projectId) => {
+    const project = store.projects.find(p => p.id === projectId)
+    if (!project) return null
 
-  // Тренды продуктивности
-  const productivityTrends = computed(() => {
-    const trends = []
-    const today = new Date()
-    
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today)
-      date.setDate(date.getDate() - i)
-      
-      const dateStr = date.toISOString().split('T')[0]
-      
-      const dailyCompleted = store.projects.flatMap(project =>
-        project.columns.flatMap(column =>
-          column.tasks.filter(task => {
-            if (task.columnId !== 'done') return false
-            const taskDate = new Date(task.updatedAt).toISOString().split('T')[0]
-            return taskDate === dateStr
-          })
-        )
-      ).length
-      
-      trends.push({
-        date: dateStr,
-        completed: dailyCompleted,
-        created: 0 // Можно добавить логику для созданных задач
-      })
+    const exportData = {
+      ...project,
+      exportDate: new Date().toISOString(),
+      version: '2.0.0'
     }
-    
-    return trends
-  })
+
+    const dataStr = JSON.stringify(exportData, null, 2)
+    const dataBlob = new Blob([dataStr], { type: 'application/json' })
+    const url = URL.createObjectURL(dataBlob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `project-${project.name}-${new Date().toISOString().split('T')[0]}.json`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+
+    return exportData
+  }
+
+  // Импорт проекта
+  const importProject = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      
+      reader.onload = (e) => {
+        try {
+          const projectData = JSON.parse(e.target.result)
+          
+          // Валидация данных проекта
+          if (!projectData.name || !projectData.columns) {
+            throw new Error('Invalid project format')
+          }
+
+          // Добавляем проект в хранилище
+          const newProject = store.addProject(projectData)
+          resolve(newProject)
+        } catch (error) {
+          reject(new Error('Failed to parse project file'))
+        }
+      }
+
+      reader.onerror = () => reject(new Error('Failed to read file'))
+      reader.readAsText(file)
+    })
+  }
 
   return {
-    projectMetrics,
-    teamProductivity,
-    productivityTrends
+    loadProjects,
+    projectsStats,
+    searchProjects,
+    exportProject,
+    importProject
   }
-}   
+}

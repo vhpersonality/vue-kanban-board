@@ -1,50 +1,46 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import { VitePWA } from 'vite-plugin-pwa'
+import { resolve } from 'path'
 
 export default defineConfig({
-  plugins: [
-    vue(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}']
-      },
-      manifest: {
-        name: 'Vue Kanban Pro',
-        short_name: 'KanbanPro',
-        description: 'Продвинутая канбан-доска для управления проектами',
-        theme_color: '#409EFF',
-        icons: [
-          {
-            src: '/icon-192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: '/icon-512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          }
-        ]
-      }
-    })
-  ],
+  plugins: [vue()],
   base: './',
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    sourcemap: false,
     rollupOptions: {
       output: {
         manualChunks: {
           'element-plus': ['element-plus'],
-          'vendor': ['vue', 'pinia']
-        }
+          'vue-vendor': ['vue', 'pinia'],
+          'utils': ['lodash-es']
+        },
+        chunkFileNames: 'assets/js/[name]-[hash].js',
+        entryFileNames: 'assets/js/[name]-[hash].js',
+        assetFileNames: 'assets/[ext]/[name]-[hash].[ext]'
       }
-    }
+    },
+    chunkSizeWarningLimit: 1000
   },
   server: {
     port: 3000,
+    host: true,
     open: true
+  },
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src')
+    }
+  },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        additionalData: `@import "@/styles/variables.scss";`
+      }
+    }
+  },
+  define: {
+    '__APP_VERSION__': JSON.stringify(process.env.npm_package_version)
   }
 })
