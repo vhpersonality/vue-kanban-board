@@ -519,15 +519,15 @@ const tagFilter = ref([])
 const dateRangeFilter = ref([])
 
 // Computed
-const projects = computed(() => store.projects)
+const projects = computed(() => store.projects || [])
 const currentProject = computed(() => store.currentProject)
 const currentUser = computed(() => store.currentUser)
-const teamMembers = computed(() => store.teamMembers)
+const teamMembers = computed(() => store.teamMembers || [])
 const availableTags = ref(TAGS)
 
 const allTasks = computed(() => {
   if (!currentProject.value) return []
-  return currentProject.value.columns.flatMap(column => column.tasks)
+  return currentProject.value.columns.flatMap(column => column.tasks || [])
 })
 
 const totalTasksCount = computed(() => allTasks.value.length)
@@ -535,7 +535,7 @@ const totalTasksCount = computed(() => allTasks.value.length)
 const completedTasksCount = computed(() => {
   if (!currentProject.value) return 0
   const doneColumn = currentProject.value.columns.find(col => col.id === 'done')
-  return doneColumn ? doneColumn.tasks.length : 0
+  return doneColumn ? (doneColumn.tasks || []).length : 0
 })
 
 const completionRate = computed(() => {
@@ -576,11 +576,6 @@ function handleProjectTemplate(command) {
 
 function openAddProjectDialog(template = 'custom') {
   selectedTemplate.value = template
-  projectForm.value = { 
-    name: '', 
-    description: '', 
-    template 
-  }
   editingProject.value = null
   projectDialogVisible.value = true
 }
@@ -601,14 +596,13 @@ function openEditTeamMemberDialog(member) {
 }
 
 function saveTeamMember(memberData) {
-  // В реальном приложении здесь бы был вызов к API
   if (editingTeamMember.value) {
     Object.assign(editingTeamMember.value, memberData)
   } else {
     const newMember = {
       id: Date.now(),
       ...memberData,
-      isOnline: Math.random() > 0.5 // Для демонстрации
+      isOnline: Math.random() > 0.5
     }
     store.teamMembers.push(newMember)
   }
@@ -621,14 +615,16 @@ function getProjectName(projectId) {
 }
 
 function getProjectStats(project) {
-  const totalTasks = project.columns.reduce((sum, column) => sum + column.tasks.length, 0)
+  const totalTasks = project.columns.reduce((sum, column) => sum + (column.tasks?.length || 0), 0)
   return `${totalTasks} задач`
 }
 
 function startEditingProjectTitle() {
   projectTitleEditing.value = true
   nextTick(() => {
-    projectTitleInput.value?.focus()
+    // Используем querySelector вместо ref для избежания ошибок
+    const input = document.querySelector('.project-title-input input')
+    if (input) input.focus()
   })
 }
 
@@ -642,7 +638,8 @@ function finishEditingProjectTitle() {
 function startEditingProjectDescription() {
   projectDescriptionEditing.value = true
   nextTick(() => {
-    projectDescriptionInput.value?.focus()
+    const textarea = document.querySelector('.project-description-input textarea')
+    if (textarea) textarea.focus()
   })
 }
 
@@ -724,7 +721,6 @@ const handleSearch = debounceFn(() => {
 }, 300)
 
 function applyFilters() {
-  // Фильтрация применяется в отдельных компонентах через props
   console.log('Filters applied:', {
     searchQuery: searchQuery.value,
     statusFilter: statusFilter.value,
@@ -832,23 +828,10 @@ function exportProject() {
 }
 
 function openProjectSettings() {
-  // Открытие настроек проекта
   console.log('Open project settings')
 }
 
 // Горячие клавиши
-onMounted(() => {
-  registerShortcut('ctrl+k', () => {
-    quickSwitcherVisible.value = true
-  })
-  registerShortcut('ctrl+n', () => openAddTaskDialog())
-  registerShortcut('ctrl+shift+n', () => openAddProjectDialog())
-  registerShortcut('escape', () => {
-    if (detailDrawerVisible.value) closeTaskDetails()
-    if (quickSwitcherVisible.value) quickSwitcherVisible.value = false
-  })
-})
-
 onMounted(() => {
   console.log('KanbanBoard mounted')
   // Добавляем проверку инициализации
@@ -856,7 +839,6 @@ onMounted(() => {
     selectProject(projects.value[0])
   }
   
-  // Горячие клавиши
   registerShortcut('ctrl+k', () => {
     quickSwitcherVisible.value = true
   })
@@ -946,8 +928,8 @@ onUnmounted(() => {
   }
   
   .theme-toggle {
-    top: 12px;
-    right: 12px;
+    top: 10px;
+    right: 10px;
   }
 }
 </style>

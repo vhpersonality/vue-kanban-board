@@ -5,9 +5,8 @@ import { resolve } from 'path'
 export default defineConfig({
   plugins: [vue({
     template: {
-      compilerOptions: {
-        // Отключаем некоторые проверки для production
-        isCustomElement: (tag) => tag.includes('-')
+      transformAssetUrls: {
+        includeAbsolute: false
       }
     }
   })],
@@ -15,7 +14,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-    sourcemap: false, // Отключаем sourcemaps для уменьшения ошибок
+    sourcemap: false,
     rollupOptions: {
       output: {
         manualChunks: {
@@ -28,14 +27,7 @@ export default defineConfig({
         assetFileNames: 'assets/[ext]/[name]-[hash].[ext]'
       }
     },
-    chunkSizeWarningLimit: 1000,
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: false, // Оставляем console для отладки
-        drop_debugger: true
-      }
-    }
+    chunkSizeWarningLimit: 1000
   },
   server: {
     port: 3000,
@@ -45,8 +37,5 @@ export default defineConfig({
     alias: {
       '@': resolve(__dirname, 'src')
     }
-  },
-  define: {
-    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production')
   }
 })
