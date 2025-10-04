@@ -470,6 +470,15 @@ import { useFilters } from '../composables/useFilters'
 import { useOfflineSync } from '../composables/useOfflineSync'
 import { TAGS, PROJECT_TEMPLATES, availableColors } from '../utils/constants'
 import { debounceFn, exportToJSON } from '../utils/helpers'
+import { onMounted } from 'vue'
+
+onMounted(() => {
+  console.log('KanbanBoard mounted')
+  // Добавляем проверку инициализации
+  if (!currentProject.value && projects.value.length > 0) {
+    selectProject(projects.value[0])
+  }
+})
 
 // Components
 import TableView from './TableView.vue'

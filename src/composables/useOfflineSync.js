@@ -3,7 +3,7 @@ import { useLocalStorage } from './useLocalStorage'
 import { debounceFn } from '../utils/helpers'
 
 export function useOfflineSync() {
-  const isOnline = ref(navigator.onLine)
+  const isOnline = ref(true) // Инициализируем значением по умолчанию
   const pendingActions = ref([])
   const { get, set } = useLocalStorage()
 
@@ -34,16 +34,23 @@ export function useOfflineSync() {
   }
 
   onMounted(() => {
+    // Инициализируем только после монтирования
+    isOnline.value = typeof navigator !== 'undefined' ? navigator.onLine : true
+    
     const savedActions = get('pendingActions', [])
     pendingActions.value = savedActions
 
-    window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', handleOnline)
+      window.addEventListener('offline', handleOffline)
+    }
   })
 
   onUnmounted(() => {
-    window.removeEventListener('online', handleOnline)
-    window.removeEventListener('offline', handleOffline)
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
   })
 
   return {

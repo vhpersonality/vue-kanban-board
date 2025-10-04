@@ -3,7 +3,7 @@ import { useLocalStorage } from './useLocalStorage'
 
 export function useTheme() {
   const { get, set } = useLocalStorage()
-  const isDarkTheme = ref(get('darkTheme', false))
+  const isDarkTheme = ref(false)
 
   const toggleTheme = () => {
     isDarkTheme.value = !isDarkTheme.value
@@ -12,6 +12,8 @@ export function useTheme() {
   }
 
   const applyTheme = () => {
+    if (typeof document === 'undefined') return
+    
     if (isDarkTheme.value) {
       document.documentElement.classList.add('dark-theme')
     } else {
@@ -20,6 +22,9 @@ export function useTheme() {
   }
 
   onMounted(() => {
+    // Инициализируем только после монтирования
+    isDarkTheme.value = get('darkTheme', false)
+    
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
     isDarkTheme.value = get('darkTheme', mediaQuery.matches)
     applyTheme()
