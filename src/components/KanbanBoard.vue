@@ -946,8 +946,8 @@ onUnmounted(() => {
   }
   
   .theme-toggle {
-    top: 10px;
-    right: 10px;
+    top: 12px;
+    right: 12px;
   }
 }
 </style>
