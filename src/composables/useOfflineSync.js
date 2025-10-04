@@ -10,7 +10,6 @@ export function useOfflineSync() {
   const syncPendingActions = debounceFn(() => {
     if (isOnline.value && pendingActions.value.length > 0) {
       console.log('Syncing pending actions:', pendingActions.value)
-      // Здесь была бы реальная синхронизация с API
       pendingActions.value = []
     }
   }, 1000)
@@ -35,7 +34,6 @@ export function useOfflineSync() {
   }
 
   onMounted(() => {
-    // Загружаем ожидающие действия из localStorage
     const savedActions = get('pendingActions', [])
     pendingActions.value = savedActions
 

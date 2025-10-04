@@ -20,13 +20,12 @@ export function useTheme() {
   }
 
   onMounted(() => {
-    // Слушаем системные настройки темы
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
     isDarkTheme.value = get('darkTheme', mediaQuery.matches)
     applyTheme()
 
     mediaQuery.addEventListener('change', (e) => {
-      if (!get('darkTheme')) { // Если тема не задана явно
+      if (!get('darkTheme')) {
         isDarkTheme.value = e.matches
         applyTheme()
       }

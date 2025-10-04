@@ -5,7 +5,6 @@ import { useLocalStorage } from '../composables/useLocalStorage'
 export const useProjectsStore = defineStore('projects', () => {
   const { get, set } = useLocalStorage()
   
-  // State
   const projects = ref(get('projects', []))
   const currentProject = ref(get('currentProject', null))
   const currentUser = ref(get('currentUser', {
@@ -23,7 +22,6 @@ export const useProjectsStore = defineStore('projects', () => {
     { id: 4, name: 'Елена Козлова', avatar: '', role: 'Project Manager', projects: [1] }
   ]))
 
-  // Getters
   const currentProjectTasks = computed(() => {
     if (!currentProject.value) return []
     return currentProject.value.columns.flatMap(column => column.tasks)
@@ -43,7 +41,6 @@ export const useProjectsStore = defineStore('projects', () => {
     )
   })
 
-  // Actions
   function setProjects(newProjects) {
     projects.value = newProjects
     set('projects', newProjects)

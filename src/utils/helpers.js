@@ -20,7 +20,6 @@ export const copyToClipboard = async (text) => {
     await navigator.clipboard.writeText(text)
     return true
   } catch (err) {
-    // Fallback for older browsers
     const textArea = document.createElement('textarea')
     textArea.value = text
     document.body.appendChild(textArea)
@@ -43,5 +42,3 @@ export const exportToJSON = (data, filename = 'data.json') => {
   document.body.removeChild(link)
   URL.revokeObjectURL(url)
 }
-
-// Удаляем дублирующую функцию isDueSoon, т.к. она теперь в dateUtils.js
