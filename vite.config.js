@@ -25,22 +25,13 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    host: true,
-    open: true
+    host: true
   },
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src')
     }
   },
-  css: {
-    preprocessorOptions: {
-      scss: {
-        additionalData: `@import "@/styles/variables.scss";`
-      }
-    }
-  },
-  define: {
-    '__APP_VERSION__': JSON.stringify(process.env.npm_package_version)
-  }
+  // Убедитесь, что публичная папка настроена правильно
+  publicDir: 'public'
 })

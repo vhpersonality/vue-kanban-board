@@ -46,24 +46,27 @@
       ]
     },
     {
-      "source": "/(.*).(js|css)",
+      "source": "/(.*)\\.(js|css)",
       "headers": [
         {
           "key": "Cache-Control",
           "value": "public, max-age=31536000, immutable"
         }
       ]
+    },
+    {
+      "source": "/(.*)\\.(ico|svg|jpg|jpeg|png|webp|gif)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
+        }
+      ]
     }
   ],
-  "functions": {
-    "app/index.html": {
-      "maxDuration": 30
-    }
-  },
   "env": {
     "VITE_APP_VERSION": "2.0.0",
     "VITE_APP_NAME": "Vue Kanban Pro"
   },
-  "regions": ["fra1"],
-  "framework": "vite"
+  "regions": ["fra1"]
 }
