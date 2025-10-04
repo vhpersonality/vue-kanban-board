@@ -47,10 +47,6 @@
               </div>
             </div>
             
-            <p class="task-description" v-if="task.description">
-              {{ task.description }}
-            </p>
-            
             <div class="task-footer">
               <div class="task-dates">
                 <div class="date-info">
@@ -277,7 +273,7 @@ function getTimeRemainingText(deadline) {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .task-title {
@@ -293,13 +289,6 @@ function getTimeRemainingText(deadline) {
   display: flex;
   gap: 8px;
   flex-shrink: 0;
-}
-
-.task-description {
-  margin: 8px 0;
-  color: #606266;
-  line-height: 1.5;
-  font-size: 14px;
 }
 
 .task-footer {

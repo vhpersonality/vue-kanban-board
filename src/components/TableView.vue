@@ -11,9 +11,6 @@
           <template #default="scope">
             <div class="task-title-cell">
               <span class="title">{{ scope.row.title }}</span>
-              <div class="description" v-if="scope.row.description">
-                {{ scope.row.description }}
-              </div>
             </div>
           </template>
         </el-table-column>
@@ -160,13 +157,6 @@ function deleteTask(task) {
 .task-title-cell .title {
   font-weight: 600;
   color: #303133;
-}
-
-.task-title-cell .description {
-  font-size: 12px;
-  color: #909399;
-  margin-top: 4px;
-  line-height: 1.4;
 }
 
 .assignee-cell {
