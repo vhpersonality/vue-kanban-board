@@ -44,10 +44,4 @@ export const exportToJSON = (data, filename = 'data.json') => {
   URL.revokeObjectURL(url)
 }
 
-export const isDueSoon = (deadline, hours = 24) => {
-  if (!deadline) return false
-  const now = new Date()
-  const deadlineDate = new Date(deadline)
-  const diffHours = (deadlineDate - now) / (1000 * 60 * 60)
-  return diffHours > 0 && diffHours <= hours
-}
+// Удаляем дублирующую функцию isDueSoon, т.к. она теперь в dateUtils.js

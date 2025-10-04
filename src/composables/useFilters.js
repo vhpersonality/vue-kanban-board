@@ -9,6 +9,8 @@ export function useFilters(tasks) {
   const dateRangeFilter = ref([])
 
   const filteredTasks = computed(() => {
+    if (!tasks || !tasks.value) return []
+    
     return tasks.value.filter(task => {
       // Поиск по тексту
       const matchesSearch = !searchQuery.value || 
@@ -38,10 +40,15 @@ export function useFilters(tasks) {
   })
 
   function isDateInRange(date, range) {
-    const taskDate = new Date(date)
-    const startDate = new Date(range[0])
-    const endDate = new Date(range[1])
-    return taskDate >= startDate && taskDate <= endDate
+    try {
+      const taskDate = new Date(date)
+      const startDate = new Date(range[0])
+      const endDate = new Date(range[1])
+      return taskDate >= startDate && taskDate <= endDate
+    } catch (error) {
+      console.error('Error checking date range:', error)
+      return false
+    }
   }
 
   const resetFilters = () => {
