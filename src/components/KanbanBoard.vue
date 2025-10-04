@@ -950,5 +950,4 @@ onUnmounted(() => {
     right: 10px;
   }
 }
-
 </style>
