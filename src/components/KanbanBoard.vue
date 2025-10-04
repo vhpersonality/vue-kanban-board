@@ -1,10 +1,3 @@
-// В начале файла с другими импортами
-import ProjectDialog from './dialogs/ProjectDialog.vue'
-import TeamMemberDialog from './dialogs/TeamMemberDialog.vue'
-import TaskDialog from './dialogs/TaskDialog.vue'
-import ColorPickerDialog from './dialogs/ColorPickerDialog.vue'
-import QuickSwitcher from './QuickSwitcher.vue'
-import TaskDetailPanel from './TaskDetailPanel.vue'
 <template>
   <div class="app-container">
     <!-- Кнопка переключения темы -->
@@ -468,17 +461,8 @@ import { useTheme } from '../composables/useTheme'
 import { useKeyboardShortcuts } from '../composables/useKeyboardShortcuts'
 import { useFilters } from '../composables/useFilters'
 import { useOfflineSync } from '../composables/useOfflineSync'
-import { TAGS, PROJECT_TEMPLATES, availableColors } from '../utils/constants'
+import { TAGS, PROJECT_TEMPLATES } from '../utils/constants'
 import { debounceFn, exportToJSON } from '../utils/helpers'
-import { onMounted } from 'vue'
-
-onMounted(() => {
-  console.log('KanbanBoard mounted')
-  // Добавляем проверку инициализации
-  if (!currentProject.value && projects.value.length > 0) {
-    selectProject(projects.value[0])
-  }
-})
 
 // Components
 import TableView from './TableView.vue'
@@ -854,6 +838,25 @@ function openProjectSettings() {
 
 // Горячие клавиши
 onMounted(() => {
+  registerShortcut('ctrl+k', () => {
+    quickSwitcherVisible.value = true
+  })
+  registerShortcut('ctrl+n', () => openAddTaskDialog())
+  registerShortcut('ctrl+shift+n', () => openAddProjectDialog())
+  registerShortcut('escape', () => {
+    if (detailDrawerVisible.value) closeTaskDetails()
+    if (quickSwitcherVisible.value) quickSwitcherVisible.value = false
+  })
+})
+
+onMounted(() => {
+  console.log('KanbanBoard mounted')
+  // Добавляем проверку инициализации
+  if (!currentProject.value && projects.value.length > 0) {
+    selectProject(projects.value[0])
+  }
+  
+  // Горячие клавиши
   registerShortcut('ctrl+k', () => {
     quickSwitcherVisible.value = true
   })
