@@ -5,8 +5,9 @@ import { resolve } from 'path'
 export default defineConfig({
   plugins: [vue({
     template: {
-      transformAssetUrls: {
-        includeAbsolute: false
+      compilerOptions: {
+        // Отключаем некоторые проверки для production
+        isCustomElement: (tag) => tag.includes('-')
       }
     }
   })],
@@ -15,19 +16,30 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     sourcemap: false,
+    minify: 'esbuild',
     rollupOptions: {
       output: {
-        manualChunks: {
-          'element-plus': ['element-plus'],
-          'vue-vendor': ['vue', 'pinia'],
-          'utils': ['lodash-es']
+        manualChunks: (id) => {
+          // Более агрессивное разделение чанков
+          if (id.includes('node_modules/vue/') || id.includes('node_modules/@vue/') || id.includes('node_modules/pinia/')) {
+            return 'vue-vendor'
+          }
+          if (id.includes('node_modules/element-plus/') || id.includes('node_modules/@element-plus/')) {
+            return 'element-plus'
+          }
+          if (id.includes('node_modules/lodash')) {
+            return 'lodash'
+          }
+          if (id.includes('node_modules')) {
+            return 'vendor'
+          }
         },
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
         assetFileNames: 'assets/[ext]/[name]-[hash].[ext]'
       }
     },
-    chunkSizeWarningLimit: 1000
+    chunkSizeWarningLimit: 800
   },
   server: {
     port: 3000,
@@ -37,5 +49,9 @@ export default defineConfig({
     alias: {
       '@': resolve(__dirname, 'src')
     }
+  },
+  define: {
+    '__VUE_OPTIONS_API__': false,
+    '__VUE_PROD_DEVTOOLS__': false
   }
 })

@@ -5,33 +5,23 @@ import { pinia } from './stores'
 import App from './App.vue'
 import './styles/main.css'
 
+// Создаем приложение
 const app = createApp(App)
+
+// Сначала Pinia, потом Element Plus
+app.use(pinia)
+app.use(ElementPlus)
 
 // Глобальная обработка ошибок
 app.config.errorHandler = (err, instance, info) => {
-  console.error('Global error handler:', err, info)
-  console.error('Error details:', {
-    message: err.message,
-    stack: err.stack,
-    component: instance?.$options?.name,
-    info
-  })
+  console.error('Vue error handler:', err)
+  console.error('Error details:', { instance, info })
 }
 
-// Обработчик ошибок Vue
-app.config.warnHandler = (msg, instance, trace) => {
-  console.warn('Vue warning:', { msg, instance, trace })
-}
+// Отключаем devtools в production
+app.config.devtools = false
 
-app.use(ElementPlus)
-app.use(pinia)
+// Монтируем приложение
 app.mount('#app')
 
-// Глобальный обработчик ошибок
-window.addEventListener('error', (event) => {
-  console.error('Global error:', event.error)
-})
-
-window.addEventListener('unhandledrejection', (event) => {
-  console.error('Unhandled promise rejection:', event.reason)
-})
+console.log('Vue app mounted successfully')
