@@ -9,7 +9,7 @@
             <el-button>{{ getCurrentTimeRange() }}</el-button>
             <el-button :icon="ArrowRight" @click="changeTimeRange(1)" />
           </el-button-group>
-          <el-button type="primary" :icon="Download">
+          <el-button type="primary" :icon="Download" @click="exportGantt">
             Экспорт
           </el-button>
         </div>
@@ -38,7 +38,7 @@
           
           <!-- Задачи -->
           <div 
-            v-for="task in allTasks" 
+            v-for="task in filteredTasks" 
             :key="task.id"
             class="gantt-row"
           >
@@ -60,6 +60,7 @@
                 :class="getTaskBarClass(task)"
                 :style="getTaskBarStyle(task)"
                 :title="getTaskTooltip(task)"
+                @click="$emit('open-task', task)"
               >
                 <span class="task-bar-label">{{ task.title }}</span>
                 <div class="task-progress" :style="getProgressStyle(task)"></div>
@@ -86,6 +87,8 @@ const props = defineProps({
   currentProject: Object
 })
 
+const emit = defineEmits(['open-task'])
+
 // Управление временным диапазоном
 const currentMonth = ref(new Date().getMonth())
 const currentYear = ref(new Date().getFullYear())
@@ -102,6 +105,9 @@ const allTasks = computed(() => {
     }))
   )
 })
+
+// Фильтрация задач (можно добавить фильтры из props)
+const filteredTasks = computed(() => allTasks.value)
 
 // Генерация временной шкалы
 const timelineDays = computed(() => {
@@ -238,13 +244,18 @@ function changeTimeRange(direction) {
     currentYear.value--
   }
 }
+
+function exportGantt() {
+  // Реализация экспорта в PNG или PDF
+  console.log('Export Gantt chart')
+}
 </script>
 
 <style scoped>
 .gantt-view {
   height: 100%;
   padding: 20px;
-  background: white;
+  background: var(--bg-primary);
 }
 
 .view-container {
@@ -259,7 +270,12 @@ function changeTimeRange(direction) {
   align-items: center;
   margin-bottom: 20px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.gantt-header h3 {
+  margin: 0;
+  color: var(--text-primary);
 }
 
 .gantt-controls {
@@ -271,8 +287,9 @@ function changeTimeRange(direction) {
 .gantt-chart {
   flex: 1;
   overflow: auto;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
+  background: var(--bg-secondary);
 }
 
 .gantt-timeline {
@@ -281,10 +298,10 @@ function changeTimeRange(direction) {
 
 .timeline-header {
   display: flex;
-  background: #f8fafc;
-  border-bottom: 1px solid #e0e0e0;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
   font-weight: 600;
-  color: #303133;
+  color: var(--text-primary);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -293,7 +310,7 @@ function changeTimeRange(direction) {
 .task-column {
   width: 300px;
   padding: 12px 16px;
-  border-right: 1px solid #e0e0e0;
+  border-right: 1px solid var(--border-color);
   flex-shrink: 0;
 }
 
@@ -306,16 +323,16 @@ function changeTimeRange(direction) {
   width: 30px;
   padding: 8px 4px;
   text-align: center;
-  border-right: 1px solid #e0e0e0;
+  border-right: 1px solid var(--border-color);
   flex-shrink: 0;
 }
 
 .timeline-day.weekend {
-  background-color: #fef2f2;
+  background-color: color-mix(in srgb, var(--danger) 10%, transparent);
 }
 
 .timeline-day.today {
-  background-color: #dbeafe;
+  background-color: color-mix(in srgb, var(--primary) 10%, transparent);
 }
 
 .day-date {
@@ -326,19 +343,24 @@ function changeTimeRange(direction) {
 
 .day-name {
   font-size: 10px;
-  color: #666;
+  color: var(--text-muted);
 }
 
 .gantt-row {
   display: flex;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-color);
   min-height: 50px;
+  background: var(--bg-secondary);
+}
+
+.gantt-row:nth-child(even) {
+  background: var(--bg-primary);
 }
 
 .task-info {
   width: 300px;
   padding: 8px 16px;
-  border-right: 1px solid #e0e0e0;
+  border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -349,6 +371,7 @@ function changeTimeRange(direction) {
   font-weight: 500;
   margin-bottom: 4px;
   font-size: 14px;
+  color: var(--text-primary);
 }
 
 .task-meta {
@@ -360,7 +383,7 @@ function changeTimeRange(direction) {
 
 .assignee {
   font-size: 12px;
-  color: #909399;
+  color: var(--text-muted);
 }
 
 .timeline-track {
@@ -370,14 +393,14 @@ function changeTimeRange(direction) {
     90deg,
     transparent,
     transparent 29px,
-    #f5f5f5 30px
+    var(--border-color) 30px
   );
 }
 
 .task-bar {
   position: absolute;
   height: 30px;
-  background: #409eff;
+  background: var(--primary);
   border-radius: 4px;
   display: flex;
   align-items: center;
@@ -388,32 +411,33 @@ function changeTimeRange(direction) {
   cursor: pointer;
   transition: all 0.3s ease;
   overflow: hidden;
+  top: 10px;
 }
 
 .task-bar:hover {
   opacity: 0.8;
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: var(--shadow-md);
 }
 
 .task-bar.planned {
-  background: #909399;
+  background: var(--info);
 }
 
 .task-bar.in-progress {
-  background: #e6a23c;
+  background: var(--warning);
 }
 
 .task-bar.review {
-  background: #409eff;
+  background: var(--primary);
 }
 
 .task-bar.completed {
-  background: #67c23a;
+  background: var(--success);
 }
 
 .task-bar.overdue {
-  background: #f56c6c;
+  background: var(--danger);
 }
 
 .task-bar-label {
@@ -451,6 +475,20 @@ function changeTimeRange(direction) {
   .gantt-controls {
     width: 100%;
     justify-content: space-between;
+  }
+  
+  .task-info {
+    width: 200px;
+  }
+  
+  .task-title {
+    font-size: 12px;
+  }
+  
+  .task-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
   }
 }
 </style>

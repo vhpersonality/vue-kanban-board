@@ -1,15 +1,31 @@
 <template>
   <div class="assignee-view">
     <div class="view-container" v-if="currentProject">
+      <div class="view-header">
+        <h2>Задачи по исполнителям</h2>
+        <div class="header-actions">
+          <el-input
+            v-model="searchQuery"
+            placeholder="Поиск по задачам..."
+            :prefix-icon="Search"
+            style="width: 200px;"
+            clearable
+          />
+        </div>
+      </div>
+
       <div class="assignee-columns">
         <div 
-          v-for="member in teamMembers" 
+          v-for="member in filteredTeamMembers" 
           :key="member.id"
           class="assignee-column"
         >
           <div class="column-header">
             <div class="assignee-info">
-              <el-avatar :size="32" :src="member.avatar" />
+              <div class="avatar-container">
+                <el-avatar :size="32" :src="member.avatar" />
+                <div class="online-indicator" :class="{ online: member.isOnline }"></div>
+              </div>
               <div class="assignee-details">
                 <div class="assignee-name">{{ member.name }}</div>
                 <div class="assignee-role">{{ member.role }}</div>
@@ -25,7 +41,7 @@
               v-for="task in getAssigneeTasks(member)"
               :key="task.id"
               class="task-card"
-              @click="$emit('update-task', task)"
+              @click="$emit('open-task', task)"
             >
               <div class="task-content">
                 <div class="task-header">
@@ -38,7 +54,24 @@
                   </el-tag>
                 </div>
                 
-                <p class="task-description">{{ truncateDescription(task.description) }}</p>
+                <p class="task-description" v-if="task.description">
+                  {{ truncateDescription(task.description) }}
+                </p>
+
+                <!-- Теги задачи -->
+                <div class="task-tags" v-if="task.tags && task.tags.length">
+                  <el-tag
+                    v-for="tag in task.tags.slice(0, 2)"
+                    :key="tag"
+                    size="mini"
+                    type="info"
+                  >
+                    {{ tag }}
+                  </el-tag>
+                  <el-tag v-if="task.tags.length > 2" size="mini" type="info">
+                    +{{ task.tags.length - 2 }}
+                  </el-tag>
+                </div>
                 
                 <div class="task-meta">
                   <div class="task-status">
@@ -52,6 +85,18 @@
                       {{ formatDate(task.deadline) }}
                     </span>
                   </div>
+                </div>
+
+                <!-- Прогресс по подзадачам -->
+                <div class="task-progress" v-if="task.subtasks && task.subtasks.length > 0">
+                  <el-progress 
+                    :percentage="calculateSubtasksProgress(task.subtasks)" 
+                    :show-text="false"
+                    size="small"
+                  />
+                  <span class="progress-text">
+                    {{ getCompletedSubtasksCount(task.subtasks) }}/{{ task.subtasks.length }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -67,30 +112,45 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { Clock } from '@element-plus/icons-vue'
+import { ref, computed } from 'vue'
+import { Clock, Search } from '@element-plus/icons-vue'
 import { formatDate, isOverdue } from '../utils/dateUtils'
 
 const props = defineProps({
   projects: Array,
-  currentProject: Object
+  currentProject: Object,
+  teamMembers: Array
 })
 
-const emit = defineEmits(['update-task'])
+const emit = defineEmits(['open-task'])
 
-// В реальном приложении это бы приходило из props или store
-const teamMembers = computed(() => [
-  { id: 1, name: 'Алексей Иванов', avatar: '', role: 'Frontend Developer' },
-  { id: 2, name: 'Мария Петрова', avatar: '', role: 'UI/UX Designer' },
-  { id: 3, name: 'Дмитрий Сидоров', avatar: '', role: 'Backend Developer' },
-  { id: 4, name: 'Елена Козлова', avatar: '', role: 'Project Manager' }
-])
+const searchQuery = ref('')
+
+// Фильтрация членов команды, у которых есть задачи в текущем проекте
+const filteredTeamMembers = computed(() => {
+  return props.teamMembers.filter(member => 
+    getAssigneeTasks(member).length > 0 || 
+    member.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+  )
+})
 
 function getAssigneeTasks(member) {
   if (!props.currentProject) return []
-  return props.currentProject.columns.flatMap(column => 
+  
+  let tasks = props.currentProject.columns.flatMap(column => 
     column.tasks.filter(task => task.assignee?.id === member.id)
   )
+
+  // Применяем поиск, если есть запрос
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    tasks = tasks.filter(task => 
+      task.title.toLowerCase().includes(query) ||
+      task.description?.toLowerCase().includes(query)
+    )
+  }
+
+  return tasks
 }
 
 function getAssigneeTaskCount(member) {
@@ -123,8 +183,18 @@ function getPriorityType(priority) {
 }
 
 function truncateDescription(description) {
-  if (!description) return 'Нет описания'
+  if (!description) return ''
   return description.length > 100 ? description.substring(0, 100) + '...' : description
+}
+
+function calculateSubtasksProgress(subtasks) {
+  if (!subtasks || subtasks.length === 0) return 0
+  const completed = subtasks.filter(st => st.completed).length
+  return Math.round((completed / subtasks.length) * 100)
+}
+
+function getCompletedSubtasksCount(subtasks) {
+  return subtasks ? subtasks.filter(st => st.completed).length : 0
 }
 </script>
 
@@ -132,31 +202,48 @@ function truncateDescription(description) {
 .assignee-view {
   height: 100%;
   padding: 20px;
-  background: #f8f9fa;
+  background: var(--bg-primary);
 }
 
 .view-container {
   height: 100%;
-  overflow-x: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.view-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.view-header h2 {
+  margin: 0;
+  color: var(--text-primary);
 }
 
 .assignee-columns {
+  flex: 1;
   display: flex;
   gap: 16px;
   height: 100%;
   align-items: flex-start;
+  overflow-x: auto;
 }
 
 .assignee-column {
   min-width: 300px;
-  background: white;
+  background: var(--bg-secondary);
   border-radius: 8px;
   padding: 16px;
   height: 100%;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  border: 1px solid #e0e0e0;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
 }
 
 .column-header {
@@ -165,13 +252,32 @@ function truncateDescription(description) {
   align-items: flex-start;
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .assignee-info {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.avatar-container {
+  position: relative;
+}
+
+.online-indicator {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  background: var(--danger);
+  border: 2px solid var(--bg-secondary);
+  border-radius: 50%;
+}
+
+.online-indicator.online {
+  background: var(--success);
 }
 
 .assignee-details {
@@ -181,12 +287,12 @@ function truncateDescription(description) {
 
 .assignee-name {
   font-weight: 600;
-  color: #303133;
+  color: var(--text-primary);
 }
 
 .assignee-role {
   font-size: 12px;
-  color: #909399;
+  color: var(--text-muted);
 }
 
 .tasks-list {
@@ -198,16 +304,17 @@ function truncateDescription(description) {
 }
 
 .task-card {
-  background: #f8f9fa;
+  background: var(--bg-primary);
   border-radius: 6px;
   padding: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
 }
 
 .task-card:hover {
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: var(--shadow-md);
   transform: translateY(-1px);
 }
 
@@ -216,23 +323,38 @@ function truncateDescription(description) {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 8px;
+  gap: 8px;
 }
 
 .task-title {
   font-weight: 600;
   font-size: 14px;
-  color: #2c3e50;
+  color: var(--text-primary);
   margin: 0;
   flex: 1;
-  margin-right: 8px;
   line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .task-description {
   font-size: 12px;
-  color: #7f8c8d;
+  color: var(--text-secondary);
   margin: 8px 0;
   line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.task-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
 }
 
 .task-meta {
@@ -250,8 +372,21 @@ function truncateDescription(description) {
 }
 
 .overdue {
-  color: #f56c6c;
+  color: var(--danger);
   font-weight: 500;
+}
+
+.task-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.progress-text {
+  font-size: 11px;
+  color: var(--text-muted);
+  min-width: 30px;
 }
 
 .empty-state {
@@ -259,8 +394,27 @@ function truncateDescription(description) {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
-  margin: 20px;
-  border-radius: 8px;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .assignee-columns {
+    flex-direction: column;
+  }
+  
+  .assignee-column {
+    min-width: auto;
+  }
+  
+  .view-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+  
+  .header-actions {
+    display: flex;
+    justify-content: center;
+  }
 }
 </style>

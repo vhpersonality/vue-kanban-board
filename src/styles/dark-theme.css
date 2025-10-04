@@ -1,0 +1,57 @@
+/* Dark theme overrides for Element Plus */
+.dark-theme .el-card {
+  --el-card-bg-color: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.dark-theme .el-table {
+  --el-table-bg-color: var(--bg-secondary);
+  --el-table-header-bg-color: var(--bg-tertiary);
+  --el-table-row-hover-bg-color: var(--bg-tertiary);
+  --el-table-border-color: var(--border-color);
+  --el-table-text-color: var(--text-primary);
+  --el-table-header-text-color: var(--text-primary);
+}
+
+.dark-theme .el-tabs {
+  --el-tabs-header-bg-color: var(--bg-secondary);
+}
+
+.dark-theme .el-drawer {
+  --el-drawer-bg-color: var(--bg-secondary);
+  --el-drawer-padding-primary: 20px;
+}
+
+.dark-theme .el-dialog {
+  --el-dialog-bg-color: var(--bg-secondary);
+  --el-dialog-title-text-color: var(--text-primary);
+}
+
+/* Component-specific dark theme styles */
+.dark-theme .sidebar {
+  background: var(--bg-secondary);
+  border-right-color: var(--border-color);
+}
+
+.dark-theme .main-content {
+  background: var(--bg-primary);
+}
+
+.dark-theme .column {
+  background: color-mix(in srgb, var(--column-color) 10%, var(--bg-secondary));
+  border-color: color-mix(in srgb, var(--column-color) 20%, var(--border-color));
+}
+
+.dark-theme .task-card {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.dark-theme .task-card:hover {
+  background: color-mix(in srgb, var(--bg-tertiary) 90%, white);
+}
+
+.dark-theme .empty-state {
+  background: var(--bg-secondary);
+}

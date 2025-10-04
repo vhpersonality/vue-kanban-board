@@ -19,6 +19,14 @@
           <el-radio-button label="done">Готово</el-radio-button>
           <el-radio-button label="overdue">Просрочено</el-radio-button>
         </el-radio-group>
+
+        <el-input
+          v-model="searchQuery"
+          placeholder="Поиск по задачам..."
+          :prefix-icon="Search"
+          style="width: 200px;"
+          clearable
+        />
       </div>
 
       <div class="tasks-list">
@@ -45,6 +53,22 @@
                   {{ getProjectName(task) }} • {{ getStatusName(task.columnId) }}
                 </el-tag>
               </div>
+            </div>
+            
+            <p class="task-description" v-if="task.description">
+              {{ truncateDescription(task.description) }}
+            </p>
+
+            <!-- Теги задачи -->
+            <div class="task-tags" v-if="task.tags && task.tags.length">
+              <el-tag
+                v-for="tag in task.tags"
+                :key="tag"
+                size="mini"
+                type="info"
+              >
+                {{ tag }}
+              </el-tag>
             </div>
             
             <div class="task-footer">
@@ -92,7 +116,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { Edit, Clock, Timer } from '@element-plus/icons-vue'
+import { Edit, Clock, Timer, Search } from '@element-plus/icons-vue'
 import { formatDate, getTimeRemaining, isOverdue } from '../utils/dateUtils'
 
 const props = defineProps({
@@ -103,6 +127,7 @@ const props = defineProps({
 const emit = defineEmits(['update-task', 'open-task'])
 
 const filterStatus = ref('all')
+const searchQuery = ref('')
 
 // Все задачи текущего пользователя
 const myTasks = computed(() => {
@@ -133,20 +158,40 @@ const overdueTasks = computed(() =>
 
 // Отфильтрованные задачи
 const filteredTasks = computed(() => {
+  let tasks = myTasks.value
+
+  // Фильтр по статусу
   switch (filterStatus.value) {
     case 'todo':
-      return myTasks.value.filter(task => task.columnId === 'todo')
+      tasks = tasks.filter(task => task.columnId === 'todo')
+      break
     case 'inProgress':
-      return myTasks.value.filter(task => task.columnId === 'inProgress')
+      tasks = tasks.filter(task => task.columnId === 'inProgress')
+      break
     case 'review':
-      return myTasks.value.filter(task => task.columnId === 'review')
+      tasks = tasks.filter(task => task.columnId === 'review')
+      break
     case 'done':
-      return myTasks.value.filter(task => task.columnId === 'done')
+      tasks = tasks.filter(task => task.columnId === 'done')
+      break
     case 'overdue':
-      return overdueTasks.value
+      tasks = overdueTasks.value
+      break
     default:
-      return myTasks.value
+      // все задачи
+      break
   }
+
+  // Поиск по тексту
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    tasks = tasks.filter(task => 
+      task.title.toLowerCase().includes(query) ||
+      task.description?.toLowerCase().includes(query)
+    )
+  }
+
+  return tasks
 })
 
 function getProjectName(task) {
@@ -201,13 +246,18 @@ function getTimeRemainingText(deadline) {
   const timeRemaining = getTimeRemaining(deadline)
   return timeRemaining ? timeRemaining.text : 'Без срока'
 }
+
+function truncateDescription(description) {
+  if (!description) return ''
+  return description.length > 150 ? description.substring(0, 150) + '...' : description
+}
 </script>
 
 <style scoped>
 .my-tasks-view {
   height: 100%;
   padding: 20px;
-  background: white;
+  background: var(--bg-primary);
 }
 
 .view-container {
@@ -222,12 +272,12 @@ function getTimeRemainingText(deadline) {
   align-items: center;
   margin-bottom: 20px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .my-tasks-header h2 {
   margin: 0;
-  color: #303133;
+  color: var(--text-primary);
 }
 
 .tasks-stats {
@@ -236,7 +286,11 @@ function getTimeRemainingText(deadline) {
 }
 
 .tasks-filter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 20px;
+  gap: 16px;
 }
 
 .tasks-list {
@@ -252,17 +306,17 @@ function getTimeRemainingText(deadline) {
   justify-content: space-between;
   align-items: flex-start;
   padding: 16px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
-  background: #fafafa;
+  background: var(--bg-secondary);
 }
 
 .task-item:hover {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: var(--shadow-md);
   transform: translateY(-1px);
-  background: white;
+  background: var(--bg-primary);
 }
 
 .task-main {
@@ -280,7 +334,7 @@ function getTimeRemainingText(deadline) {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #303133;
+  color: var(--text-primary);
   flex: 1;
   margin-right: 12px;
 }
@@ -289,6 +343,19 @@ function getTimeRemainingText(deadline) {
   display: flex;
   gap: 8px;
   flex-shrink: 0;
+}
+
+.task-description {
+  margin: 0 0 12px 0;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.task-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
 }
 
 .task-footer {
@@ -309,11 +376,11 @@ function getTimeRemainingText(deadline) {
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: #909399;
+  color: var(--text-muted);
 }
 
 .date-info.overdue {
-  color: #f56c6c;
+  color: var(--danger);
   font-weight: 500;
 }
 
@@ -343,6 +410,11 @@ function getTimeRemainingText(deadline) {
   .tasks-stats {
     width: 100%;
     justify-content: space-between;
+  }
+  
+  .tasks-filter {
+    flex-direction: column;
+    align-items: stretch;
   }
   
   .task-header {

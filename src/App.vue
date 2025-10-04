@@ -1,25 +1,24 @@
 <template>
-  <div id="app">
+  <div id="app" :class="{ 'dark-theme': isDarkTheme }">
     <KanbanBoard />
   </div>
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
 import KanbanBoard from './components/KanbanBoard.vue'
+import { useTheme } from './composables/useTheme'
+
+const { isDarkTheme } = useTheme()
+
+onMounted(() => {
+  console.log('🚀 Kanban Board запущен!')
+})
 </script>
 
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
 #app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: #f5f5f5;
   min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 </style>
